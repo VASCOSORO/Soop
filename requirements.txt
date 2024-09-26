@@ -1,3 +1,4 @@
-streamlit==1.20.0
-pandas==1.5.3
-openpyxl==3.0.9  # Para leer archivos Excel
+pandas==2.1.1
+ipywidgets==8.1.0
+openpyxl==3.1.2
+streamlit==1.24.0  # O la versión que prefieras
