@@ -1,105 +1,94 @@
-import os
 import streamlit as st
 import pandas as pd
+import os
 
-# Configuración de la página de la aplicación
-st.set_page_config(page_title="Super Buscador de Productos", layout="wide")
+# Cargar el archivo Excel
+ruta_excel = '1083.xlsx'
+df = pd.read_excel(ruta_excel)
 
 # Título de la aplicación
-st.title('🔍 Super Buscador de Productos')
-
-# Ruta del archivo Excel
-ruta_excel = '1083.xlsx'  # Asegúrate de que este archivo esté en el repositorio
-
-# Mensaje de depuración para verificar que la aplicación empieza
-st.write("Iniciando la aplicación...")
-
-# Cargar el DataFrame desde el archivo de Excel
-@st.cache_data
-def cargar_datos(ruta):
-    try:
-        df = pd.read_excel(ruta)
-        st.success("Archivo cargado exitosamente.")  # Mensaje de éxito
-        return df
-    except Exception as e:
-        st.error(f"Error al cargar el archivo: {e}")
-        return None
+st.title('Super Buscador de Productos')
 
 # Verificar si el archivo fue cargado
-df = cargar_datos(ruta_excel)
-
 if df is None:
-    st.write("No se pudo cargar el archivo de Excel.")
+    st.error("No se pudo cargar el archivo de Excel.")
 else:
+    st.success(f"Archivo cargado exitosamente.")
     st.write(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
-# Convertir la columna 'Fecha Creado' a datetime si no lo está
-if 'Fecha Creado' in df.columns:
-    df['Fecha Creado'] = pd.to_datetime(df['Fecha Creado'], errors='coerce')
-    # Ya no mostramos la conversión de la fecha en pantalla
-else:
-    st.write("La columna 'Fecha Creado' no existe en el DataFrame.")
+# Obtener lista de categorías únicas
+if 'Categorias' in df.columns:
+    df['Categorias_split'] = df['Categorias'].apply(lambda x: [cat.strip() for cat in x.split(',')] if pd.notna(x) else [])
+    categorias_unicas = sorted(set([cat for sublist in df['Categorias_split'].tolist() for cat in sublist]))
 
-# Separar las categorías individuales y obtener una lista única
-def obtener_categorias_unicas(df):
-    if 'Categorias' in df.columns:
-        categorias_series = df['Categorias'].dropna().apply(lambda x: [cat.strip() for cat in x.split(',')])
-        todas_categorias = set()
-        for lista_cats in categorias_series:
-            todas_categorias.update(lista_cats)
-        return sorted(todas_categorias)
-    else:
-        st.write("La columna 'Categorias' no existe en el DataFrame.")
-        return []
+# Crear un contenedor para las casillas y el campo de búsqueda en una línea
+col1, col2, col3 = st.columns([1, 1, 1])
 
-# Mostrar las categorías solo si se selecciona el checkbox
-checkbox_categorias = st.checkbox('Ver lista por Categorías')
-if checkbox_categorias:
-    lista_categorias = obtener_categorias_unicas(df)
-    st.write(f"Categorías únicas encontradas: {lista_categorias}")
+with col1:
+    ver_por_categoria = st.checkbox("Ver lista por Categorías")
 
-# Función para mostrar el producto seleccionado con el estilo preferido
-def mostrar_producto_formato_completo(producto):
-    st.subheader(f"Detalles del producto: {producto['Nombre']}")
-    st.write(f"**Código**: {producto['Codigo']}")
-    st.write(f"**Stock**: {producto['Stock']}")
-    st.write(f"**Precio Jugueterías Face**: ${producto.get('Precio Jugueterias face', 'Sin datos')}")
-    st.write(f"**Precio Mayorista**: ${producto.get('Precio', 'Sin datos')}")
-    st.write(f"**Categorías**: {producto['Categorias']}")
-    st.write(f"**Descripción**: {producto.get('Descripción', 'Sin datos')}")
-    # Si hay URL de imagen, mostrarla
-    img_url = producto.get('imagen', '')
-    if img_url and img_url != 'Sin datos':
-        st.image(img_url, width=300, caption="Imagen del producto")
+with col2:
+    ordenar_novedad = st.checkbox("Ordenar por Novedad")
 
-# Casillas adicionales que faltaban
-checkbox_ordenar_novedad = st.checkbox('Ordenar por Novedad')
-checkbox_sugerir_rubro = st.checkbox('Sugerir por Rubro (Próximamente)', disabled=True)
+with col3:
+    sugerir_rubro = st.checkbox("Sugerir por Rubro (Próximamente)", disabled=True)
 
-# Cuadro de búsqueda centrado
+# Campo de búsqueda centrado debajo de las casillas
 entrada_busqueda = st.text_input("🔍 Ingresá el nombre del producto")
 
-# Mostrar los resultados basados en la búsqueda
-if entrada_busqueda:
-    coincidencias = df[df['Nombre'].str.contains(entrada_busqueda, case=False, na=False)]
-    if not coincidencias.empty:
-        st.write(f"Se encontraron {coincidencias.shape[0]} productos.")
-        # Desplegable para seleccionar el producto si hay más de uno
-        opciones = {f"{fila['Nombre']} (Código: {fila['Codigo']})": fila.to_dict() for idx, fila in coincidencias.iterrows()}
-        producto_seleccionado = st.selectbox("Seleccioná un producto", options=opciones.keys())
-
-        # Mostrar el producto seleccionado
-        if producto_seleccionado:
-            mostrar_producto_formato_completo(opciones[producto_seleccionado])
+# Mostrar el dropdown de categorías si se selecciona "Ver lista por Categorías"
+if ver_por_categoria:
+    categoria_seleccionada = st.selectbox("Categorías:", [""] + categorias_unicas)
+    
+    if categoria_seleccionada:
+        # Filtrar productos por la categoría seleccionada
+        productos_filtrados = df[df['Categorias_split'].apply(lambda x: categoria_seleccionada in x)]
+        
+        if not productos_filtrados.empty:
+            # Paginación: mostrar 10 productos por página
+            num_productos_por_pagina = 10
+            num_paginas = len(productos_filtrados) // num_productos_por_pagina + 1
+            pagina_seleccionada = st.selectbox("Página:", range(1, num_paginas + 1))
+            
+            # Obtener los productos de la página seleccionada
+            inicio = (pagina_seleccionada - 1) * num_productos_por_pagina
+            fin = inicio + num_productos_por_pagina
+            productos_pagina = productos_filtrados.iloc[inicio:fin]
+            
+            # Mostrar productos en formato de tarjeta
+            for idx, producto in productos_pagina.iterrows():
+                mostrar_producto_formato_completo(producto)
+        else:
+            st.warning("No se encontraron productos para esta categoría.")
     else:
-        st.warning("No se encontraron productos con ese nombre.")
-else:
-    st.info("Esperando entrada de búsqueda o selección de categoría...")
+        st.info("Esperando selección de categoría o entrada de búsqueda...")
 
-# Mostrar imagen del Super Buscador si no hay búsqueda
-ruta_imagen_super_buscador = 'bot_8.png'  # Asegúrate de que esta imagen esté en el repositorio
+# Función para obtener valores de manera segura
+def obtener_valor(producto, campo):
+    valor = producto.get(campo, 'Sin datos')
+    return 'Sin datos' si pd.isna(valor) o valor == '' else valor
 
-if os.path.exists(ruta_imagen_super_buscador):
-    st.image(ruta_imagen_super_buscador, caption="Super Buscador de Productos", use_column_width=True)
-else:
-    st.error("Imagen del Super Buscador no encontrada.")
+# Función para mostrar productos en formato de tarjeta (como en Colab)
+def mostrar_producto_formato_completo(producto):
+    # Obtener valores del producto
+    stock = obtener_valor(producto, 'Stock')
+    precio_jugueterias_face = obtener_valor(producto, 'Precio Jugueterias face')
+    descripcion = obtener_valor(producto, 'Descripción')
+    categorias = obtener_valor(producto, 'Categorias')
+    nombre = obtener_valor(producto, 'Nombre')
+    codigo = obtener_valor(producto, 'Codigo')
+    img_url = obtener_valor(producto, 'imagen')  # Asegúrate de tener las imágenes
+
+    # Mostrar el producto en una tarjeta
+    st.markdown(f"""
+    <div style="border:2px solid #cccccc; padding: 10px; margin: 10px 0; border-radius: 10px; background-color: #f9f9f9;">
+        <h3>{nombre}</h3>
+        <p><strong>Código:</strong> {codigo}</p>
+        <p><strong>Stock:</strong> {stock}</p>
+        <p><strong>Precio:</strong> {precio_jugueterias_face}</p>
+        <p><strong>Descripción:</strong> {descripcion}</p>
+        <p><strong>Categorías:</strong> {categorias}</p>
+        <img src="{img_url}" style="width:150px; height:auto; border-radius:5px;"/>
+    </div>
+    """, unsafe_allow_html=True)
+
