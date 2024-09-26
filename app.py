@@ -52,8 +52,11 @@ def obtener_categorias_unicas(df):
         st.write("La columna 'Categorias' no existe en el DataFrame.")
         return []
 
-lista_categorias = obtener_categorias_unicas(df)
-st.write(f"Categorías únicas encontradas: {lista_categorias}")
+# Mostrar las categorías solo si se selecciona el checkbox
+checkbox_categorias = st.checkbox('Ver lista por Categorías')
+if checkbox_categorias:
+    lista_categorias = obtener_categorias_unicas(df)
+    st.write(f"Categorías únicas encontradas: {lista_categorias}")
 
 # Función para mostrar el producto seleccionado con el estilo preferido
 def mostrar_producto_formato_completo(producto):
@@ -69,16 +72,6 @@ def mostrar_producto_formato_completo(producto):
     if img_url and img_url != 'Sin datos':
         st.image(img_url, width=300, caption="Imagen del producto")
 
-# Mostrar las opciones de visualización: Checkbox
-checkbox_categorias = st.checkbox('Ver lista por Categorías')
-checkbox_ordenar_novedad = st.checkbox('Ordenar x Novedad')
-checkbox_sugerir_rubro = st.checkbox('Sugerir x Rubro (Próximamente)', disabled=True)
-
-# Dropdown para categorías
-categoria_seleccionada = None
-if checkbox_categorias:
-    categoria_seleccionada = st.selectbox('Seleccionar categoría:', options=lista_categorias)
-
 # Cuadro de búsqueda centrado
 entrada_busqueda = st.text_input("🔍 Ingresá el nombre del producto")
 
@@ -87,18 +80,15 @@ if entrada_busqueda:
     coincidencias = df[df['Nombre'].str.contains(entrada_busqueda, case=False, na=False)]
     if not coincidencias.empty:
         st.write(f"Se encontraron {coincidencias.shape[0]} productos.")
-        # Mostrar la información del primer producto como ejemplo
-        primer_producto = coincidencias.iloc[0].to_dict()
-        mostrar_producto_formato_completo(primer_producto)
+        # Desplegable para seleccionar el producto si hay más de uno
+        opciones = {f"{fila['Nombre']} (Código: {fila['Codigo']})": fila.to_dict() for idx, fila in coincidencias.iterrows()}
+        producto_seleccionado = st.selectbox("Seleccioná un producto", options=opciones.keys())
+
+        # Mostrar el producto seleccionado
+        if producto_seleccionado:
+            mostrar_producto_formato_completo(opciones[producto_seleccionado])
     else:
         st.warning("No se encontraron productos con ese nombre.")
-elif categoria_seleccionada:
-    coincidencias = df[df['Categorias'].str.contains(categoria_seleccionada, case=False, na=False)]
-    if not coincidencias.empty:
-        st.write(f"Se encontraron {coincidencias.shape[0]} productos en la categoría {categoria_seleccionada}.")
-        st.dataframe(coincidencias[['Nombre', 'Codigo', 'Stock', 'Precio', 'Categorias']])
-    else:
-        st.warning(f"No se encontraron productos en la categoría {categoria_seleccionada}.")
 else:
     st.info("Esperando entrada de búsqueda o selección de categoría...")
 
