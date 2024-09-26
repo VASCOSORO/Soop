@@ -100,16 +100,17 @@ for idx, fila in df_paginado.iterrows():
         st.write(f"**Categorías**: {fila['Categorias']}")
     st.markdown("---")
 
-# Mostrar botones de navegación de páginas en línea
+# Mostrar botones de navegación de páginas alineados con el selector de página
 total_paginas = (len(df_filtrado) // productos_por_pagina) + 1
 if total_paginas > 1:
-    col1, col2 = st.columns([1, 1])
+    col1, col2, col3 = st.columns([1, 1, 1])
     with col1:
         if pagina_actual > 1:
             if st.button("Página anterior"):
                 st.session_state.pagina_actual = pagina_actual - 1
     with col2:
+        st.write(f"Página {pagina_actual} de {total_paginas}")
+    with col3:
         if pagina_actual < total_paginas:
             if st.button("Página siguiente"):
                 st.session_state.pagina_actual = pagina_actual + 1
-    st.write(f"Página {pagina_actual} de {total_paginas}")
