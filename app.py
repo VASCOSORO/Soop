@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import os
 
 # Cargar el archivo Excel
 ruta_excel = '1083.xlsx'
