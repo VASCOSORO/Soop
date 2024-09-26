@@ -1,93 +1,103 @@
 import streamlit as st
 import pandas as pd
 
-# Cargar el archivo Excel
+# Cargar el archivo de Excel
 ruta_excel = '1083.xlsx'
-df = pd.read_excel(ruta_excel)
 
-# Título de la aplicación
-st.title('Super Buscador de Productos')
+# Verificar si el archivo fue cargado correctamente
+@st.cache_data
+def cargar_datos(ruta):
+    try:
+        df = pd.read_excel(ruta)
+        return df
+    except Exception as e:
+        st.error(f"Error al cargar el archivo: {e}")
+        return None
 
-# Verificar si el archivo fue cargado
+df = cargar_datos(ruta_excel)
+
+# Mostrar mensaje si no se carga el DataFrame
 if df is None:
-    st.error("No se pudo cargar el archivo de Excel.")
-else:
-    st.success(f"Archivo cargado exitosamente.")
-    st.write(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
+    st.stop()
 
-# Obtener lista de categorías únicas
-if 'Categorias' in df.columns:
-    df['Categorias_split'] = df['Categorias'].apply(lambda x: [cat.strip() for cat in x.split(',')] if pd.notna(x) else [])
-    categorias_unicas = sorted(set([cat for sublist in df['Categorias_split'].tolist() for cat in sublist]))
+# Convertir la columna 'Fecha Creado' a datetime si existe
+if 'Fecha Creado' in df.columns:
+    df['Fecha Creado'] = pd.to_datetime(df['Fecha Creado'], errors='coerce')
 
-# Crear un contenedor para las casillas y el campo de búsqueda en una línea
-col1, col2, col3 = st.columns([1, 1, 1])
-
-with col1:
-    ver_por_categoria = st.checkbox("Ver lista por Categorías")
-
-with col2:
-    ordenar_novedad = st.checkbox("Ordenar por Novedad")
-
-with col3:
-    sugerir_rubro = st.checkbox("Sugerir por Rubro (Próximamente)", disabled=True)
-
-# Campo de búsqueda centrado debajo de las casillas
-entrada_busqueda = st.text_input("🔍 Ingresá el nombre del producto")
-
-# Mostrar el dropdown de categorías si se selecciona "Ver lista por Categorías"
-if ver_por_categoria:
-    categoria_seleccionada = st.selectbox("Categorías:", [""] + categorias_unicas)
-    
-    if categoria_seleccionada:
-        # Filtrar productos por la categoría seleccionada
-        productos_filtrados = df[df['Categorias_split'].apply(lambda x: categoria_seleccionada in x)]
-        
-        if not productos_filtrados.empty:
-            # Paginación: mostrar 10 productos por página
-            num_productos_por_pagina = 10
-            num_paginas = len(productos_filtrados) // num_productos_por_pagina + 1
-            pagina_seleccionada = st.selectbox("Página:", range(1, num_paginas + 1))
-            
-            # Obtener los productos de la página seleccionada
-            inicio = (pagina_seleccionada - 1) * num_productos_por_pagina
-            fin = inicio + num_productos_por_pagina
-            productos_pagina = productos_filtrados.iloc[inicio:fin]
-            
-            # Mostrar productos en formato de tarjeta
-            for idx, producto in productos_pagina.iterrows():
-                mostrar_producto_formato_completo(producto)
-        else:
-            st.warning("No se encontraron productos para esta categoría.")
+# Extraer categorías únicas
+def obtener_categorias_unicas(df):
+    if 'Categorias' in df.columns:
+        categorias_series = df['Categorias'].dropna().apply(lambda x: [cat.strip() for cat in x.split(',')])
+        todas_categorias = set()
+        for lista_cats in categorias_series:
+            todas_categorias.update(lista_cats)
+        return sorted(todas_categorias)
     else:
-        st.info("Esperando selección de categoría o entrada de búsqueda...")
+        return []
 
-# Función para obtener valores de manera segura
-def obtener_valor(producto, campo):
-    valor = producto.get(campo, 'Sin datos')
-    return 'Sin datos' if pd.isna(valor) or valor == '' else valor  # CORREGIDO
+lista_categorias = obtener_categorias_unicas(df)
 
-# Función para mostrar productos en formato de tarjeta (como en Colab)
-def mostrar_producto_formato_completo(producto):
-    # Obtener valores del producto
-    stock = obtener_valor(producto, 'Stock')
-    precio_jugueterias_face = obtener_valor(producto, 'Precio Jugueterias face')
-    descripcion = obtener_valor(producto, 'Descripción')
-    categorias = obtener_valor(producto, 'Categorias')
-    nombre = obtener_valor(producto, 'Nombre')
-    codigo = obtener_valor(producto, 'Codigo')
-    img_url = obtener_valor(producto, 'imagen')  # Asegúrate de tener las imágenes
+# Diseño y estructura
+st.title("🧐 Super Buscador de Productos")
 
-    # Mostrar el producto en una tarjeta
-    st.markdown(f"""
-    <div style="border:2px solid #cccccc; padding: 10px; margin: 10px 0; border-radius: 10px; background-color: #f9f9f9;">
-        <h3>{nombre}</h3>
-        <p><strong>Código:</strong> {codigo}</p>
-        <p><strong>Stock:</strong> {stock}</p>
-        <p><strong>Precio:</strong> {precio_jugueterias_face}</p>
-        <p><strong>Descripción:</strong> {descripcion}</p>
-        <p><strong>Categorías:</strong> {categorias}</p>
-        <img src="{img_url}" style="width:150px; height:auto; border-radius:5px;"/>
-    </div>
-    """, unsafe_allow_html=True)
+st.success("Archivo cargado exitosamente.")
+st.write(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
+# Opciones de filtrado
+col1, col2, col3 = st.columns([1, 1, 1])
+with col1:
+    checkbox_categorias = st.checkbox("Ver lista por Categorías", value=False)
+with col2:
+    checkbox_ordenar_novedad = st.checkbox("Ordenar por Novedad")
+with col3:
+    st.checkbox("Sugerir por Rubro (Próximamente)", disabled=True)
+
+# Campo de búsqueda
+st.text_input("🔍 Ingresá el nombre del producto", key="producto_buscar")
+
+# Mostrar lista desplegable de categorías si el checkbox está activo
+if checkbox_categorias:
+    categoria_seleccionada = st.selectbox("Categorías:", options=[""] + lista_categorias)
+
+# Paginación
+productos_por_pagina = 10
+pagina_actual = st.number_input("Página:", min_value=1, step=1, value=1)
+
+# Filtrar productos por la categoría seleccionada
+if checkbox_categorias and categoria_seleccionada:
+    df_filtrado = df[df['Categorias'].str.contains(categoria_seleccionada, na=False)]
+else:
+    df_filtrado = df.copy()
+
+# Filtrar por novedad si está activo
+if checkbox_ordenar_novedad and 'Fecha Creado' in df_filtrado.columns:
+    df_filtrado = df_filtrado.sort_values(by='Fecha Creado', ascending=False)
+
+# Filtrar productos por búsqueda
+producto_buscar = st.session_state.producto_buscar
+if producto_buscar:
+    df_filtrado = df_filtrado[df_filtrado['Nombre'].str.contains(producto_buscar, case=False, na=False)]
+
+# Paginación
+inicio = (pagina_actual - 1) * productos_por_pagina
+fin = inicio + productos_por_pagina
+df_paginado = df_filtrado.iloc[inicio:fin]
+
+# Mostrar productos en formato "tarjeta"
+for idx, fila in df_paginado.iterrows():
+    st.markdown(f"### {fila['Nombre']}")
+    st.write(f"**Código**: {fila['Codigo']}")
+    st.write(f"**Stock**: {fila['Stock']}")
+    st.write(f"**Precio**: {fila['Precio']}")
+    st.write(f"**Descripción**: {fila.get('Descripción', 'Sin descripción disponible')}")
+    st.write(f"**Categorías**: {fila['Categorias']}")
+    st.markdown("---")
+
+# Mostrar botones de navegación de páginas si es necesario
+total_paginas = (len(df_filtrado) // productos_por_pagina) + 1
+if total_paginas > 1:
+    st.write(f"Página {pagina_actual} de {total_paginas}")
+    if st.button("Página anterior", disabled=(pagina_actual == 1)):
+        st.session_state.pagina_actual = pagina_actual - 1
+    if st.button("Página siguiente", disabled=(pagina_actual == total_paginas)):
+        st.session_state.pagina_actual = pagina_actual + 1
