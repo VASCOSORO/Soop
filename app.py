@@ -36,7 +36,7 @@ else:
 # Convertir la columna 'Fecha Creado' a datetime si no lo está
 if 'Fecha Creado' in df.columns:
     df['Fecha Creado'] = pd.to_datetime(df['Fecha Creado'], errors='coerce')
-    st.write("Columna 'Fecha Creado' convertida a formato de fecha.")
+    # Ya no mostramos la conversión de la fecha en pantalla
 else:
     st.write("La columna 'Fecha Creado' no existe en el DataFrame.")
 
@@ -71,6 +71,10 @@ def mostrar_producto_formato_completo(producto):
     img_url = producto.get('imagen', '')
     if img_url and img_url != 'Sin datos':
         st.image(img_url, width=300, caption="Imagen del producto")
+
+# Casillas adicionales que faltaban
+checkbox_ordenar_novedad = st.checkbox('Ordenar por Novedad')
+checkbox_sugerir_rubro = st.checkbox('Sugerir por Rubro (Próximamente)', disabled=True)
 
 # Cuadro de búsqueda centrado
 entrada_busqueda = st.text_input("🔍 Ingresá el nombre del producto")
