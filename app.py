@@ -2,8 +2,10 @@ import os
 import streamlit as st
 import pandas as pd
 
-# Título de la aplicación
+# Configuración de la página de la aplicación
 st.set_page_config(page_title="Super Buscador de Productos", layout="wide")
+
+# Título de la aplicación
 st.title('🔍 Super Buscador de Productos')
 
 # Ruta del archivo Excel
@@ -67,24 +69,38 @@ def mostrar_producto_formato_completo(producto):
     if img_url and img_url != 'Sin datos':
         st.image(img_url, width=300, caption="Imagen del producto")
 
+# Mostrar las opciones de visualización: Checkbox
+checkbox_categorias = st.checkbox('Ver lista por Categorías')
+checkbox_ordenar_novedad = st.checkbox('Ordenar x Novedad')
+checkbox_sugerir_rubro = st.checkbox('Sugerir x Rubro (Próximamente)', disabled=True)
+
+# Dropdown para categorías
+categoria_seleccionada = None
+if checkbox_categorias:
+    categoria_seleccionada = st.selectbox('Seleccionar categoría:', options=lista_categorias)
+
 # Cuadro de búsqueda centrado
 entrada_busqueda = st.text_input("🔍 Ingresá el nombre del producto")
 
-# Filtrar los productos por nombre cuando se ingresa un texto en la búsqueda
+# Mostrar los resultados basados en la búsqueda
 if entrada_busqueda:
     coincidencias = df[df['Nombre'].str.contains(entrada_busqueda, case=False, na=False)]
     if not coincidencias.empty:
         st.write(f"Se encontraron {coincidencias.shape[0]} productos.")
-        # Mostrar los resultados en una tabla
-        st.dataframe(coincidencias[['Nombre', 'Codigo', 'Stock', 'Precio', 'Categorias']].reset_index(drop=True))
-
-        # Selección del primer producto para mostrar detalles
+        # Mostrar la información del primer producto como ejemplo
         primer_producto = coincidencias.iloc[0].to_dict()
         mostrar_producto_formato_completo(primer_producto)
     else:
         st.warning("No se encontraron productos con ese nombre.")
+elif categoria_seleccionada:
+    coincidencias = df[df['Categorias'].str.contains(categoria_seleccionada, case=False, na=False)]
+    if not coincidencias.empty:
+        st.write(f"Se encontraron {coincidencias.shape[0]} productos en la categoría {categoria_seleccionada}.")
+        st.dataframe(coincidencias[['Nombre', 'Codigo', 'Stock', 'Precio', 'Categorias']])
+    else:
+        st.warning(f"No se encontraron productos en la categoría {categoria_seleccionada}.")
 else:
-    st.info("Esperando entrada de búsqueda...")
+    st.info("Esperando entrada de búsqueda o selección de categoría...")
 
 # Mostrar imagen del Super Buscador si no hay búsqueda
 ruta_imagen_super_buscador = 'bot_8.png'  # Asegúrate de que esta imagen esté en el repositorio
