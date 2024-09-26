@@ -65,7 +65,7 @@ if ver_por_categoria:
 # Función para obtener valores de manera segura
 def obtener_valor(producto, campo):
     valor = producto.get(campo, 'Sin datos')
-    return 'Sin datos' si pd.isna(valor) o valor == '' else valor
+    return 'Sin datos' if pd.isna(valor) or valor == '' else valor  # CORREGIDO
 
 # Función para mostrar productos en formato de tarjeta (como en Colab)
 def mostrar_producto_formato_completo(producto):
