@@ -24,6 +24,9 @@ if df is None:
 if 'Fecha Creado' in df.columns:
     df['Fecha Creado'] = pd.to_datetime(df['Fecha Creado'], errors='coerce')
 
+# Mostrar solo el número de filas y columnas cargadas, sin el mensaje verde
+st.write(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
+
 # Extraer categorías únicas
 def obtener_categorias_unicas(df):
     if 'Categorias' in df.columns:
@@ -39,9 +42,6 @@ lista_categorias = obtener_categorias_unicas(df)
 
 # Diseño y estructura
 st.title("🧐 Super Buscador de Productos")
-
-st.success("Archivo cargado exitosamente.")
-st.write(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
 # Opciones de filtrado
 col1, col2, col3 = st.columns([1, 1, 1])
