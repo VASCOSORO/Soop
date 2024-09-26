@@ -2,15 +2,11 @@ import os
 import streamlit as st
 import pandas as pd
 
-# Actualización de pip y pillow para evitar errores de instalación
-os.system('pip install --upgrade pip')
-os.system('pip install pillow==9.2.0')
-
 # Título de la aplicación
 st.title('Super Buscador de Productos')
 
 # Ruta del archivo Excel
-ruta_excel = '1083_productos_al_24_de_sep.xlsx'  # Asegúrate de que este archivo esté en el repositorio
+ruta_excel = '1083.xlsx'  # Asegúrate de que este archivo esté en el repositorio
 
 # Mensaje de depuración para verificar que la aplicación empieza
 st.write("Iniciando la aplicación...")
@@ -134,4 +130,3 @@ if entrada_busqueda:
         st.write("No se encontraron productos con ese nombre.")
 else:
     st.write("Esperando entrada de búsqueda...")
-
