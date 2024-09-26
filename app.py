@@ -1,3 +1,7 @@
+import os
+os.system('pip install --upgrade pip')
+os.system('pip install pillow==9.2.0')
+
 import streamlit as st
 import pandas as pd
 import os
