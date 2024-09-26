@@ -85,19 +85,31 @@ df_paginado = df_filtrado.iloc[inicio:fin]
 
 # Mostrar productos en formato "tarjeta"
 for idx, fila in df_paginado.iterrows():
-    st.markdown(f"### {fila['Nombre']}")
-    st.write(f"**Código**: {fila['Codigo']}")
-    st.write(f"**Stock**: {fila['Stock']}")
-    st.write(f"**Precio**: {fila['Precio']}")
-    st.write(f"**Descripción**: {fila.get('Descripción', 'Sin descripción disponible')}")
-    st.write(f"**Categorías**: {fila['Categorias']}")
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        if 'Imagen' in fila and pd.notna(fila['Imagen']):
+            st.image(fila['Imagen'], width=100)  # Mostrar la imagen si está disponible
+        else:
+            st.image("https://via.placeholder.com/100", width=100)  # Imagen de marcador si no hay imagen disponible
+    with col2:
+        st.markdown(f"### {fila['Nombre']}")
+        st.write(f"**Código**: {fila['Codigo']}")
+        st.write(f"**Stock**: {fila['Stock']}")
+        st.write(f"**Precio**: {fila['Precio']}")
+        st.write(f"**Descripción**: {fila.get('Descripción', 'Sin descripción disponible')}")
+        st.write(f"**Categorías**: {fila['Categorias']}")
     st.markdown("---")
 
-# Mostrar botones de navegación de páginas si es necesario
+# Mostrar botones de navegación de páginas en línea
 total_paginas = (len(df_filtrado) // productos_por_pagina) + 1
 if total_paginas > 1:
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if pagina_actual > 1:
+            if st.button("Página anterior"):
+                st.session_state.pagina_actual = pagina_actual - 1
+    with col2:
+        if pagina_actual < total_paginas:
+            if st.button("Página siguiente"):
+                st.session_state.pagina_actual = pagina_actual + 1
     st.write(f"Página {pagina_actual} de {total_paginas}")
-    if st.button("Página anterior", disabled=(pagina_actual == 1)):
-        st.session_state.pagina_actual = pagina_actual - 1
-    if st.button("Página siguiente", disabled=(pagina_actual == total_paginas)):
-        st.session_state.pagina_actual = pagina_actual + 1
