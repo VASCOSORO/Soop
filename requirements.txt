@@ -1,4 +1,3 @@
 streamlit
 pandas
-pillow==9.2.0  # Una versión más estable y comúnmente sin problemas
 openpyxl
