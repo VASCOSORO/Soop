@@ -82,11 +82,6 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
     
     total_paginas = (len(df) + productos_por_pagina - 1) // productos_por_pagina
     col1, col2, col3 = st.columns([1, 2, 1])
-    
-    # Ajustar los botones de navegación
-    with col2:
-        if pagina < total_paginas:
-            st.button('Página siguiente', on_click=lambda: st.session_state.update({'pagina': pagina + 1}))
 
 # Cargar datos
 df = load_data()
