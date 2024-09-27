@@ -52,8 +52,8 @@ def mostrar_producto_completo(producto):
     if imagen_url:
         imagen = cargar_imagen(imagen_url)
         if imagen:
-            # Reducir el tamaño de la imagen en un 30%
-            st.image(imagen, width=140)  # Ajusta el valor de width según sea necesario
+            # Reducir el tamaño de la imagen en un 10%
+            st.image(imagen, width=180)  # Ajustar el valor de width para un tamaño un 10% más pequeño
         else:
             st.write("Imagen no disponible.")
 
