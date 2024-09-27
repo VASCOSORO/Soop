@@ -22,20 +22,20 @@ def cargar_imagen(url):
 # Mostrar producto en formato completo (con imagen)
 def mostrar_producto_completo(producto):
     st.markdown(f"### {producto['Nombre']}")
+    imagen_url = producto.get('imagen', '')
+    if imagen_url:
+        imagen = cargar_imagen(imagen_url)
+        if imagen:
+            st.image(imagen, use_column_width=True)  # Mostrar imagen arriba del título
+        else:
+            st.write("Imagen no disponible.")
+
     st.write(f"Código: {producto['Codigo']}")
     st.write(f"Stock: {producto['Stock']}")
     st.write(f"Precio: {producto['Precio']}")
     st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
     st.write(f"Categorías: {producto['Categorias']}")
 
-    imagen_url = producto.get('imagen', '')
-    if imagen_url:
-        imagen = cargar_imagen(imagen_url)
-        if imagen:
-            st.image(imagen, use_column_width=True)
-        else:
-            st.write("Imagen no disponible.")
-    
     # Checkbox para mostrar ubicación
     if st.checkbox('Mostrar Ubicación'):
         st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}")
@@ -50,12 +50,8 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
 
     for i, producto in productos_pagina.iterrows():
         st.write(f"### {producto['Nombre']}")
-        st.write(f"Código: {producto['Codigo']}")
-        st.write(f"Stock: {producto['Stock']}")
-        st.write(f"Precio: {producto['Precio']}")
-        st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
-        st.write(f"Categorías: {producto['Categorias']}")
         
+        # Mostrar imagen del producto
         imagen_url = producto.get('imagen', '')
         if imagen_url:
             imagen = cargar_imagen(imagen_url)
@@ -63,6 +59,12 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
                 st.image(imagen, width=100)  # Mostrar imagen en pequeño
             else:
                 st.write("Imagen no disponible.")
+        
+        st.write(f"Código: {producto['Codigo']}")
+        st.write(f"Stock: {producto['Stock']}")
+        st.write(f"Precio: {producto['Precio']}")
+        st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
+        st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
     
     total_paginas = (len(df) + productos_por_pagina - 1) // productos_por_pagina
