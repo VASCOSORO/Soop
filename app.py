@@ -87,7 +87,7 @@ st.markdown("# 🐻 Super Buscador de Productos")
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
 # Campo de búsqueda con el comportamiento que describiste
-busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
+busqueda = st.text_input("Escribí acá para buscar")
 
 # Verificar si el usuario ha escrito algo y filtrar productos
 if busqueda:
@@ -99,8 +99,10 @@ if busqueda:
         producto_seleccionado = productos_filtrados[productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1) == seleccion].iloc[0]
         mostrar_producto_completo(producto_seleccionado)
 
-# Alinear correctamente las opciones con un espacio arriba
-st.write("")  # Espacio
+# Espacio entre las opciones
+st.write("\n")  # Esto agrega un espacio en blanco
+
+# Alinear correctamente las opciones
 col_opciones = st.columns(3)
 with col_opciones[0]:
     ver_por_categorias = st.checkbox("Ver lista por Categorías")
@@ -112,10 +114,11 @@ with col_opciones[2]:
 # Ver lista por categorías
 if ver_por_categorias:
     categoria = st.selectbox('Categorías:', sorted(df['Categorias'].dropna().unique()))
-    if categoria:  # Solo proceder si se selecciona una categoría
+    if categoria:
         productos_categoria = df[df['Categorias'].str.contains(categoria)]
-        pagina = st.number_input('Página:', min_value=1, value=1)
-        mostrar_lista_productos(productos_categoria, pagina)
+        if not productos_categoria.empty:
+            pagina = st.number_input('Página:', min_value=1, value=1)
+            mostrar_lista_productos(productos_categoria, pagina)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
