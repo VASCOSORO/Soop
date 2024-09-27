@@ -121,9 +121,10 @@ st.write("")  # Espacio
 
 # Ver lista por categorías
 if ver_por_categorias:
-    categoria = st.selectbox('Categorías:', sorted(df['Categorias'].dropna().unique()), index=0)  # Mantener el índice en cero
-    if categoria:  # Solo proceder si se selecciona una categoría
-        productos_categoria = df[df['Categorias'].str.contains(categoria)]
+    categorias_unicas = sorted(df['Categorias'].dropna().unique())
+    categoria_seleccionada = st.selectbox('Categorías:', categorias_unicas)  # Ahora se selecciona de una lista única
+    if categoria_seleccionada:  # Solo proceder si se selecciona una categoría
+        productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada)]
         pagina = st.number_input('Página:', min_value=1, value=1)
         mostrar_lista_productos(productos_categoria, pagina)
 
