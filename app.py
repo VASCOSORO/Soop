@@ -7,8 +7,7 @@ from io import BytesIO
 # Cargar el archivo Excel
 @st.cache_data
 def load_data():
-    # Asegúrate de que el archivo Excel esté en el mismo directorio y se carguen todas las filas
-    df = pd.read_excel('1083.xlsx', engine='openpyxl')  
+    df = pd.read_excel('1083.xlsx', engine='openpyxl')  # Asegúrate de que el archivo Excel esté en el mismo directorio y se carguen todas las filas
     return df
 
 # Función para cargar la imagen desde una URL
@@ -33,35 +32,22 @@ def obtener_color_stock(stock):
 
 # Mostrar producto en formato completo (con imagen)
 def mostrar_producto_completo(producto):
-    # Aumentar el tamaño del título en un 20%
-    st.markdown(f"<h3 style='font-size: 33.6px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)  
-    
-    # Mostrar Código, Precio y STOCK con la palabra "STOCK" y color basado en el valor
-    stock_color = obtener_color_stock(producto['Stock'])
-    st.markdown(
-        f"""
-        <span style='font-size: 24px; font-weight: bold;'>
-            Código: {producto['Codigo']} | Precio: ${producto['Precio']} | 
-            <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>
-        </span>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)  # Ajustar tamaño del título
+    st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${producto['Precio']} | Stock: {producto['Stock']}</span>", unsafe_allow_html=True)  # Mostrar código, precio y stock
 
     imagen_url = producto.get('imagen', '')
     if imagen_url:
         imagen = cargar_imagen(imagen_url)
         if imagen:
-            # Reducir el tamaño de la imagen en un 10%
-            st.image(imagen, width=180)  # Ajustar el valor de width para un tamaño un 10% más pequeño
+            st.image(imagen, use_column_width=True)
         else:
             st.write("Imagen no disponible.")
 
     # Mostrar descripción debajo de la imagen
-    st.markdown(f"<p style='font-size: 20px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size: 26px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
     
     # Mostrar categorías debajo de la descripción
-    st.write(f"<p style='font-size: 20px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
+    st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
 
     # Checkbox para mostrar ubicación
     if st.checkbox('Mostrar Ubicación'):
@@ -82,20 +68,14 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
             if imagen_url:
                 imagen = cargar_imagen(imagen_url)
                 if imagen:
-                    st.image(imagen, width=156)  # Imagen al 30% más grande
+                    st.image(imagen, width=160)  # Imagen al 30% más grande
                 else:
                     st.write("Imagen no disponible.")
 
         with col2:
             st.write(f"### {producto['Nombre']}")
             stock_color = obtener_color_stock(producto['Stock'])
-            st.markdown(
-                f"""
-                Código: {producto['Codigo']} | Precio: ${producto['Precio']} | 
-                <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>
-                """,
-                unsafe_allow_html=True
-            )
+            st.markdown(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
             st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
             st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
