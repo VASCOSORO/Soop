@@ -121,7 +121,7 @@ st.write("")  # Espacio
 
 # Ver lista por categorías
 if ver_por_categorias:
-    categoria = st.selectbox('Categorías:', sorted(df['Categorias'].dropna().unique()))
+    categoria = st.selectbox('Categorías:', sorted(df['Categorias'].dropna().unique()), index=0)  # Mantener el índice en cero
     if categoria:  # Solo proceder si se selecciona una categoría
         productos_categoria = df[df['Categorias'].str.contains(categoria)]
         pagina = st.number_input('Página:', min_value=1, value=1)
