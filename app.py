@@ -24,6 +24,7 @@ def mostrar_producto_completo(producto):
     st.markdown(f"### {producto['Nombre']}")
     st.write(f"Código: {producto['Codigo']}")
     st.write(f"Stock: {producto['Stock']}")
+
     st.write(f"Precio: {producto['Precio']}")
     st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
     st.write(f"Categorías: {producto['Categorias']}")
@@ -99,15 +100,24 @@ if busqueda:
         producto_seleccionado = productos_filtrados[productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1) == seleccion].iloc[0]
         mostrar_producto_completo(producto_seleccionado)
 
+# Alinear correctamente las opciones
+col_opciones = st.columns(3)
+with col_opciones[0]:
+    ver_por_categorias = st.checkbox("Ver lista por Categorías")
+with col_opciones[1]:
+    ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
+with col_opciones[2]:
+    sugerir_por_rubro = st.checkbox("Sugerir por Rubro (Próximamente)")
+
 # Ver lista por categorías
-if st.checkbox('Ver lista por Categorías'):
+if ver_por_categorias:
     categoria = st.selectbox('Categorías:', sorted(df['Categorias'].dropna().unique()))
     productos_categoria = df[df['Categorias'].str.contains(categoria)]
     pagina = st.number_input('Página:', min_value=1, value=1)
     mostrar_lista_productos(productos_categoria, pagina)
 
 # Ordenar por novedad
-if st.checkbox('Ordenar por Novedad'):
+if ordenar_por_novedad:
     if 'Fecha Creado' in df.columns:
         df_ordenado = df.sort_values('Fecha Creado', ascending=False)
         pagina = st.number_input('Página:', min_value=1, value=1)
@@ -116,5 +126,5 @@ if st.checkbox('Ordenar por Novedad'):
         st.warning("No se encontró la columna 'Fecha Creado'.")
 
 # Sugerir por Rubro (en desarrollo)
-if st.checkbox('Sugerir por Rubro (Próximamente)'):
+if sugerir_por_rubro:
     st.info("Esta función estará disponible próximamente.")
