@@ -68,12 +68,14 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
     total_paginas = (len(df) + productos_por_pagina - 1) // productos_por_pagina
     col1, col2, col3 = st.columns([1, 2, 1])
     
+    # Lógica para no mostrar la opción de página anterior si está en la primera página
     with col1:
         if pagina > 1:
             st.button('Página anterior', on_click=lambda: st.session_state.update({'pagina': pagina - 1}))
     with col2:
         st.write(f"Página {pagina} de {total_paginas}")
     with col3:
+        # Lógica para no mostrar la opción de página siguiente si está en la última página
         if pagina < total_paginas:
             st.button('Página siguiente', on_click=lambda: st.session_state.update({'pagina': pagina + 1}))
 
