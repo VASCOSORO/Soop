@@ -10,15 +10,6 @@ def load_data():
     df = pd.read_excel('1083.xlsx', engine='openpyxl')  # Asegúrate de que el archivo Excel esté en el mismo directorio y se carguen todas las filas
     return df
 
-# Función para cargar la imagen desde una URL
-def cargar_imagen(url):
-    try:
-        response = requests.get(url)
-        img = Image.open(BytesIO(response.content))
-        return img
-    except:
-        return None
-
 # Función para cambiar el color del stock
 def obtener_color_stock(stock):
     if stock > 5:
@@ -137,3 +128,12 @@ if ordenar_por_novedad:
 # Sugerir por Rubro (en desarrollo)
 if sugerir_por_rubro:
     st.info("Esta función estará disponible próximamente.")
+
+# Función para cargar la imagen desde una URL
+def cargar_imagen(url):
+    try:
+        response = requests.get(url)
+        img = Image.open(BytesIO(response.content))
+        return img
+    except:
+        return None
