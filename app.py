@@ -19,11 +19,19 @@ def cargar_imagen(url):
     except:
         return None
 
+# Función para cambiar el color del stock
+def obtener_color_stock(stock):
+    if stock > 5:
+        return 'green'
+    elif stock < 3:
+        return 'red'
+    else:
+        return 'orange'
+
 # Mostrar producto en formato completo (con imagen)
 def mostrar_producto_completo(producto):
-    st.markdown(f"### {producto['Nombre']}", unsafe_allow_html=True)  # Aumentar el tamaño del título
-    st.write(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | Stock: {producto['Stock']}")
-    st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
+    st.markdown(f"<h3 style='font-size: 28px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)  # Ajustar tamaño del título
+    st.markdown(f"<span style='font-size: 24px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${producto['Precio']} | Stock: {producto['Stock']}</span>", unsafe_allow_html=True)  # Mostrar código, precio y stock
 
     imagen_url = producto.get('imagen', '')
     if imagen_url:
@@ -32,6 +40,12 @@ def mostrar_producto_completo(producto):
             st.image(imagen, use_column_width=True)
         else:
             st.write("Imagen no disponible.")
+
+    # Mostrar descripción debajo de la imagen
+    st.markdown(f"<p style='font-size: 20px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
+    
+    # Mostrar categorías debajo de la descripción
+    st.write(f"<p style='font-size: 20px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
 
     # Checkbox para mostrar ubicación
     if st.checkbox('Mostrar Ubicación'):
@@ -47,7 +61,9 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
 
     for i, producto in productos_pagina.iterrows():
         st.write(f"### {producto['Nombre']}")
-        st.write(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | Stock: {producto['Stock']}")
+        st.markdown(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | Stock: {producto['Stock']}", unsafe_allow_html=True)  # Cambiar color del stock
+        stock_color = obtener_color_stock(producto['Stock'])
+        st.markdown(f"<span style='color: {stock_color}; font-size: 20px;'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
         st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
         st.write(f"Categorías: {producto['Categorias']}")
         
@@ -55,7 +71,7 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
         if imagen_url:
             imagen = cargar_imagen(imagen_url)
             if imagen:
-                st.image(imagen, width=120)  # Mostrar imagen en un tamaño más grande
+                st.image(imagen, width=120)  # Mostrar imagen un 20% más grande
             else:
                 st.write("Imagen no disponible.")
         st.write("---")
@@ -63,12 +79,8 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
     total_paginas = (len(df) + productos_por_pagina - 1) // productos_por_pagina
     col1, col2, col3 = st.columns([1, 2, 1])
     
-    with col1:
-        if pagina > 1:
-            st.button('Página anterior', on_click=lambda: st.session_state.update({'pagina': pagina - 1}))
+    # Ajustar los botones de navegación
     with col2:
-        st.write(f"Página {pagina} de {total_paginas}")
-    with col3:
         if pagina < total_paginas:
             st.button('Página siguiente', on_click=lambda: st.session_state.update({'pagina': pagina + 1}))
 
@@ -76,12 +88,12 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
 df = load_data()
 
 # Título
-st.markdown("# 🐻 Super Buscador de Productos")
+st.markdown("<h1 style='text-align: center;'>🐻 Super Buscador de Productos</h1>", unsafe_allow_html=True)  # Centrar título
 
 # Mostrar número de filas y columnas cargadas
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
-# Campo de búsqueda con el comportamiento que describiste
+# Campo de búsqueda
 busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
 
 # Verificar si el usuario ha escrito algo y filtrar productos
