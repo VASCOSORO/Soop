@@ -33,7 +33,8 @@ def obtener_color_stock(stock):
 # Mostrar producto en formato completo (con imagen)
 def mostrar_producto_completo(producto):
     st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
-    st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${producto['Precio']} | Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
+    precio_formateado = f"{producto['Precio']:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
+    st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${precio_formateado} | Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
 
     imagen_url = producto.get('imagen', '')
     if imagen_url:
@@ -75,7 +76,8 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
         with col2:
             st.write(f"### {producto['Nombre']}")
             stock_color = obtener_color_stock(producto['Stock'])
-            st.markdown(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)
+            precio_formateado = f"{producto['Precio']:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
+            st.markdown(f"Código: {producto['Codigo']} | Precio: ${precio_formateado} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)
             st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
             st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
