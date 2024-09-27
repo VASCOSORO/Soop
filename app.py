@@ -51,8 +51,7 @@ def mostrar_producto_completo(producto):
 
     # Checkbox para mostrar ubicación
     if st.checkbox('Mostrar Ubicación'):
-        st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}")
-        st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
+        st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}") st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
         st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
 
 # Mostrar productos en formato de lista con imágenes (paginar resultados)
