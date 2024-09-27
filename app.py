@@ -7,7 +7,7 @@ from io import BytesIO
 # Cargar el archivo Excel
 @st.cache_data
 def load_data():
-    df = pd.read_excel('1083.xlsx')  # Asegúrate de que el archivo Excel esté en el mismo directorio
+    df = pd.read_excel('1083.xlsx', engine='openpyxl')  # Asegúrate de que el archivo Excel esté en el mismo directorio y se carguen todas las filas
     return df
 
 # Función para cargar la imagen desde una URL
@@ -68,14 +68,14 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
             if imagen_url:
                 imagen = cargar_imagen(imagen_url)
                 if imagen:
-                    st.image(imagen, width=96)  # Imagen al 20% más pequeña
+                    st.image(imagen, width=156)  # Imagen al 30% más grande
                 else:
                     st.write("Imagen no disponible.")
 
         with col2:
             st.write(f"### {producto['Nombre']}")
             stock_color = obtener_color_stock(producto['Stock'])
-            st.markdown(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | <span style='color: {stock_color};'>{producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
+            st.markdown(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
             st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
             st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
