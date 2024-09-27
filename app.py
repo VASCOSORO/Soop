@@ -1,63 +1,120 @@
 import streamlit as st
 import pandas as pd
+from PIL import Image
+import requests
+from io import BytesIO
 
-# Función para mostrar la información del producto con formato completo
-def mostrar_producto_formato_completo(producto):
-    st.subheader(producto['Nombre'])
-    st.markdown(f"**Código**: {producto['Codigo']}")
-    st.markdown(f"**Stock**: {producto['Stock']}")
-    st.markdown(f"**Precio**: {producto['Precio']}")
-    st.markdown(f"**Descripción**: {producto['Descripción'] if pd.notna(producto['Descripción']) else 'Sin datos'}")
-    st.markdown(f"**Categorías**: {producto['Categorias']}")
-    
-    # Mostrar la imagen si existe el enlace
-    if pd.notna(producto['Imagen']):
-        st.image(producto['Imagen'], width=400)
-    else:
-        st.text("Imagen no disponible")
-
-# Cargar archivo Excel
-@st.cache
-def cargar_datos():
-    df = pd.read_excel('productos.xlsx')  # Asegúrate de que el archivo tenga las columnas correctas
+# Cargar el archivo Excel
+@st.cache_data
+def load_data():
+    df = pd.read_excel('1083.xlsx')  # Asegúrate de que el archivo Excel esté en el mismo directorio
     return df
 
-# Cargar datos del archivo Excel
-df = cargar_datos()
+# Función para cargar la imagen desde una URL
+def cargar_imagen(url):
+    try:
+        response = requests.get(url)
+        img = Image.open(BytesIO(response.content))
+        return img
+    except:
+        return None
 
-st.title("🐻 Super Buscador de Productos")
+# Mostrar producto en formato completo (con imagen)
+def mostrar_producto_completo(producto):
+    st.markdown(f"### {producto['Nombre']}")
+    st.write(f"Código: {producto['Codigo']}")
+    st.write(f"Stock: {producto['Stock']}")
+    st.write(f"Precio: {producto['Precio']}")
+    st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
+    st.write(f"Categorías: {producto['Categorias']}")
 
-# Mostrar mensaje de carga exitosa
+    imagen_url = producto.get('imagen', '')
+    if imagen_url:
+        imagen = cargar_imagen(imagen_url)
+        if imagen:
+            st.image(imagen, use_column_width=True)
+        else:
+            st.write("Imagen no disponible.")
+    
+    # Checkbox para mostrar ubicación
+    if st.checkbox('Mostrar Ubicación'):
+        st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}")
+        st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
+        st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
+
+# Mostrar productos en formato de lista con imágenes (paginar resultados)
+def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
+    inicio = (pagina - 1) * productos_por_pagina
+    fin = inicio + productos_por_pagina
+    productos_pagina = df.iloc[inicio:fin]
+
+    for i, producto in productos_pagina.iterrows():
+        st.write(f"### {producto['Nombre']}")
+        st.write(f"Código: {producto['Codigo']}")
+        st.write(f"Stock: {producto['Stock']}")
+        st.write(f"Precio: {producto['Precio']}")
+        st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
+        st.write(f"Categorías: {producto['Categorias']}")
+        
+        imagen_url = producto.get('imagen', '')
+        if imagen_url:
+            imagen = cargar_imagen(imagen_url)
+            if imagen:
+                st.image(imagen, width=100)  # Mostrar imagen en pequeño
+            else:
+                st.write("Imagen no disponible.")
+        st.write("---")
+    
+    total_paginas = (len(df) + productos_por_pagina - 1) // productos_por_pagina
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col1:
+        if pagina > 1:
+            st.button('Página anterior', on_click=lambda: st.session_state.update({'pagina': pagina - 1}))
+    with col2:
+        st.write(f"Página {pagina} de {total_paginas}")
+    with col3:
+        if pagina < total_paginas:
+            st.button('Página siguiente', on_click=lambda: st.session_state.update({'pagina': pagina + 1}))
+
+# Cargar datos
+df = load_data()
+
+# Título
+st.markdown("# 🐻 Super Buscador de Productos")
+
+# Mostrar número de filas y columnas cargadas
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
-# Input para buscar productos por nombre
-buscar_producto = st.selectbox("Escribí acá para buscar", [""] + df['Nombre'].tolist())
+# Campo de búsqueda con el comportamiento que describiste
+busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
 
-# Evitar que muestre el mismo producto dos veces y limpiar cuando no haya selección
-if buscar_producto:
-    producto_seleccionado = df[df['Nombre'] == buscar_producto].iloc[0]
-    mostrar_producto_formato_completo(producto_seleccionado)
+# Verificar si el usuario ha escrito algo y filtrar productos
+if busqueda:
+    productos_filtrados = df[df['Nombre'].str.contains(busqueda, case=False)]
+    if not productos_filtrados.empty:
+        seleccion = st.selectbox("Seleccionar:", productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1))
 
-# Opciones de ver por categorías, ordenar por novedad, y sugerir por rubro
-col1, col2, col3 = st.columns(3)
-with col1:
-    ver_por_categorias = st.checkbox("Ver lista por Categorías")
-with col2:
-    ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
-with col3:
-    sugerir_por_rubro = st.checkbox("Sugerir por Rubro (Próximamente)")
+        # Mostrar producto seleccionado
+        producto_seleccionado = productos_filtrados[productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1) == seleccion].iloc[0]
+        mostrar_producto_completo(producto_seleccionado)
 
-# Si se selecciona "Ver lista por Categorías"
-if ver_por_categorias:
-    categorias = df['Categorias'].unique()
-    categoria_seleccionada = st.selectbox("Categorías:", [""] + list(categorias))
-    if categoria_seleccionada:
-        productos_filtrados = df[df['Categorias'].str.contains(categoria_seleccionada)]
-        for _, producto in productos_filtrados.iterrows():
-            mostrar_producto_formato_completo(producto)
+# Ver lista por categorías
+if st.checkbox('Ver lista por Categorías'):
+    categoria = st.selectbox('Categorías:', sorted(df['Categorias'].dropna().unique()))
+    productos_categoria = df[df['Categorias'].str.contains(categoria)]
+    pagina = st.number_input('Página:', min_value=1, value=1)
+    mostrar_lista_productos(productos_categoria, pagina)
 
-# Para ordenar por novedad, se asume que hay una columna de fecha en el dataset
-if ordenar_por_novedad:
-    df_ordenado = df.sort_values(by='Fecha Creado', ascending=False)
-    for _, producto in df_ordenado.iterrows():
-        mostrar_producto_formato_completo(producto)
+# Ordenar por novedad
+if st.checkbox('Ordenar por Novedad'):
+    if 'Fecha Creado' in df.columns:
+        df_ordenado = df.sort_values('Fecha Creado', ascending=False)
+        pagina = st.number_input('Página:', min_value=1, value=1)
+        mostrar_lista_productos(df_ordenado, pagina)
+    else:
+        st.warning("No se encontró la columna 'Fecha Creado'.")
+
+# Sugerir por Rubro (en desarrollo)
+if st.checkbox('Sugerir por Rubro (Próximamente)'):
+    st.info("Esta función estará disponible próximamente.")
