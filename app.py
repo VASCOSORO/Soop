@@ -97,7 +97,7 @@ busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), 
 
 # Condición para mostrar la imagen del bot
 if busqueda == '':
-    st.image('bot (8).png', width=200)  # Mostrar imagen solo si el buscador está vacío
+    st.image('bot (8).png', width=400)  # Mostrar imagen solo si el buscador está vacío, tamaño aumentado
 
 # Verificar si el usuario ha escrito algo y filtrar productos
 if busqueda:
