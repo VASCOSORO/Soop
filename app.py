@@ -4,12 +4,6 @@ from PIL import Image
 import requests
 from io import BytesIO
 
-# Cargar el archivo Excel
-@st.cache_data
-def load_data():
-    df = pd.read_excel('1083.xlsx')  # Asegúrate de que el archivo Excel esté en el mismo directorio
-    return df
-
 # Función para cargar la imagen desde una URL
 def cargar_imagen(url):
     try:
