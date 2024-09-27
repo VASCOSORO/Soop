@@ -24,7 +24,6 @@ def mostrar_producto_completo(producto):
     st.markdown(f"### {producto['Nombre']}")
     st.write(f"Código: {producto['Codigo']}")
     st.write(f"Stock: {producto['Stock']}")
-
     st.write(f"Precio: {producto['Precio']}")
     st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
     st.write(f"Categorías: {producto['Categorias']}")
@@ -100,7 +99,8 @@ if busqueda:
         producto_seleccionado = productos_filtrados[productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1) == seleccion].iloc[0]
         mostrar_producto_completo(producto_seleccionado)
 
-# Alinear correctamente las opciones
+# Alinear correctamente las opciones con un espacio arriba
+st.write("")  # Espacio
 col_opciones = st.columns(3)
 with col_opciones[0]:
     ver_por_categorias = st.checkbox("Ver lista por Categorías")
@@ -112,9 +112,10 @@ with col_opciones[2]:
 # Ver lista por categorías
 if ver_por_categorias:
     categoria = st.selectbox('Categorías:', sorted(df['Categorias'].dropna().unique()))
-    productos_categoria = df[df['Categorias'].str.contains(categoria)]
-    pagina = st.number_input('Página:', min_value=1, value=1)
-    mostrar_lista_productos(productos_categoria, pagina)
+    if categoria:  # Solo proceder si se selecciona una categoría
+        productos_categoria = df[df['Categorias'].str.contains(categoria)]
+        pagina = st.number_input('Página:', min_value=1, value=1)
+        mostrar_lista_productos(productos_categoria, pagina)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
@@ -122,8 +123,6 @@ if ordenar_por_novedad:
         df_ordenado = df.sort_values('Fecha Creado', ascending=False)
         pagina = st.number_input('Página:', min_value=1, value=1)
         mostrar_lista_productos(df_ordenado, pagina)
-
-
     else:
         st.warning("No se encontró la columna 'Fecha Creado'.")
 
