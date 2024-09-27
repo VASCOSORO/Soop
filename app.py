@@ -24,7 +24,6 @@ def mostrar_producto_completo(producto):
     st.markdown(f"### {producto['Nombre']}")
     st.write(f"Código: {producto['Codigo']}")
     st.write(f"Stock: {producto['Stock']}")
-
     st.write(f"Precio: {producto['Precio']}")
     st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
     st.write(f"Categorías: {producto['Categorias']}")
@@ -88,7 +87,7 @@ st.markdown("# 🐻 Super Buscador de Productos")
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
 # Campo de búsqueda con el comportamiento que describiste
-busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
+busqueda = st.text_input("Escribí acá para buscar")  # Cambiado a text_input
 
 # Verificar si el usuario ha escrito algo y filtrar productos
 if busqueda:
@@ -112,9 +111,10 @@ with col_opciones[2]:
 # Ver lista por categorías
 if ver_por_categorias:
     categoria = st.selectbox('Categorías:', sorted(df['Categorias'].dropna().unique()))
-    productos_categoria = df[df['Categorias'].str.contains(categoria)]
-    pagina = st.number_input('Página:', min_value=1, value=1)
-    mostrar_lista_productos(productos_categoria, pagina)
+    if categoria:  # Solo proceder si se selecciona una categoría
+        productos_categoria = df[df['Categorias'].str.contains(categoria)]
+        pagina = st.number_input('Página:', min_value=1, value=1)
+        mostrar_lista_productos(productos_categoria, pagina)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
