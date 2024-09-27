@@ -61,9 +61,8 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
 
     for i, producto in productos_pagina.iterrows():
         st.write(f"### {producto['Nombre']}")
-        st.markdown(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | Stock: {producto['Stock']}", unsafe_allow_html=True)  # Cambiar color del stock
         stock_color = obtener_color_stock(producto['Stock'])
-        st.markdown(f"<span style='color: {stock_color}; font-size: 20px;'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
+        st.markdown(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | <span style='color: {stock_color};'>{producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
         st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
         st.write(f"Categorías: {producto['Categorias']}")
         
@@ -100,10 +99,11 @@ busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), 
 if busqueda:
     productos_filtrados = df[df['Nombre'].str.contains(busqueda, case=False)]
     if not productos_filtrados.empty:
-        seleccion = st.selectbox("Seleccionar:", productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1))
+        # Eliminar el desplegable de selección
+        # seleccion = st.selectbox("Seleccionar:", productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1))
 
         # Mostrar producto seleccionado
-        producto_seleccionado = productos_filtrados[productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1) == seleccion].iloc[0]
+        producto_seleccionado = productos_filtrados.iloc[0]  # Solo muestra el primero
         mostrar_producto_completo(producto_seleccionado)
 
 # Alinear correctamente las opciones con un espacio arriba
