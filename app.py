@@ -96,9 +96,13 @@ st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archiv
 busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
 
 # Variables para verificar si se tildaron las casillas
-ver_por_categorias = st.checkbox("Ver lista por Categorías")
-ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
-sugerir_por_rubro = st.checkbox("Sugerir por Rubro (Próximamente)")
+col_opciones = st.columns(3)  # Crear tres columnas para las opciones
+with col_opciones[0]:
+    ver_por_categorias = st.checkbox("Ver lista por Categorías")
+with col_opciones[1]:
+    ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
+with col_opciones[2]:
+    sugerir_por_rubro = st.checkbox("Sugerir por Rubro (Próximamente)")
 
 # Condición para mostrar la imagen del bot
 if busqueda == '' and not (ver_por_categorias or ordenar_por_novedad or sugerir_por_rubro):
