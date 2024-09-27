@@ -68,7 +68,7 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
             if imagen_url:
                 imagen = cargar_imagen(imagen_url)
                 if imagen:
-                    st.image(imagen, width=160)  # Imagen al 30% más grande
+                    st.image(imagen, width=140)  # Imagen al 30% más grande
                 else:
                     st.write("Imagen no disponible.")
 
