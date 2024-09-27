@@ -23,10 +23,12 @@ def cargar_imagen(url):
 def obtener_color_stock(stock):
     if stock > 5:
         return 'green'
-    elif stock < 3:
+    elif stock < 0:  # Cambiado para incluir stock negativo
         return 'red'
-    else:
+    elif stock < 3:
         return 'orange'
+    else:
+        return 'black'  # Color por defecto para stock >= 3
 
 # Mostrar producto en formato completo (con imagen)
 def mostrar_producto_completo(producto):
@@ -37,7 +39,7 @@ def mostrar_producto_completo(producto):
     if imagen_url:
         imagen = cargar_imagen(imagen_url)
         if imagen:
-            st.image(imagen, use_column_width=True)
+            st.image(imagen, use_column_width=True)  # Imagen al 100%
         else:
             st.write("Imagen no disponible.")
 
@@ -60,19 +62,21 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
     productos_pagina = df.iloc[inicio:fin]
 
     for i, producto in productos_pagina.iterrows():
-        st.write(f"### {producto['Nombre']}")
-        stock_color = obtener_color_stock(producto['Stock'])
-        st.markdown(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | <span style='color: {stock_color};'>{producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
-        st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
-        st.write(f"Categorías: {producto['Categorias']}")
-        
-        imagen_url = producto.get('imagen', '')
-        if imagen_url:
-            imagen = cargar_imagen(imagen_url)
-            if imagen:
-                st.image(imagen, width=120)  # Mostrar imagen un 20% más grande
-            else:
-                st.write("Imagen no disponible.")
+        col1, col2 = st.columns([1, 3])  # Dos columnas: una para la imagen y otra para los detalles
+        with col1:
+            imagen_url = producto.get('imagen', '')
+            if imagen_url:
+                imagen = cargar_imagen(imagen_url)
+                if imagen:
+                    st.image(imagen, width=96)  # Imagen al 20% más pequeña
+                else:
+                    st.write("Imagen no disponible.")
+
+        with col2:
+            st.write(f"### {producto['Nombre']}")
+            st.markdown(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | Stock: <span style='color: {obtener_color_stock(producto['Stock'])};'>{producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
+            st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
+            st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
     
     total_paginas = (len(df) + productos_por_pagina - 1) // productos_por_pagina
@@ -99,11 +103,10 @@ busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), 
 if busqueda:
     productos_filtrados = df[df['Nombre'].str.contains(busqueda, case=False)]
     if not productos_filtrados.empty:
-        # Eliminar el desplegable de selección
-        # seleccion = st.selectbox("Seleccionar:", productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1))
+        seleccion = st.selectbox("Seleccionar:", productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1))
 
         # Mostrar producto seleccionado
-        producto_seleccionado = productos_filtrados.iloc[0]  # Solo muestra el primero
+        producto_seleccionado = productos_filtrados[productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1) == seleccion].iloc[0]
         mostrar_producto_completo(producto_seleccionado)
 
 # Alinear correctamente las opciones con un espacio arriba
