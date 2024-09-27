@@ -86,18 +86,17 @@ st.markdown("# 🐻 Super Buscador de Productos")
 # Mostrar número de filas y columnas cargadas
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
-# Campo de búsqueda con el comportamiento que describiste
-busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
+# Input para búsqueda de productos
+busqueda = st.text_input("🔍 Ingresá el nombre del producto")
+productos_filtrados = df[df['Nombre'].str.contains(busqueda, case=False)] if busqueda else df
 
-# Verificar si el usuario ha escrito algo y filtrar productos
-if busqueda:
-    productos_filtrados = df[df['Nombre'].str.contains(busqueda, case=False)]
-    if not productos_filtrados.empty:
-        seleccion = st.selectbox("Seleccionar:", productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1))
+# Dropdown para seleccionar producto
+if not productos_filtrados.empty:
+    seleccion = st.selectbox("Seleccionar:", productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1))
 
-        # Mostrar producto seleccionado
-        producto_seleccionado = productos_filtrados[productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1) == seleccion].iloc[0]
-        mostrar_producto_completo(producto_seleccionado)
+    # Mostrar producto seleccionado
+    producto_seleccionado = productos_filtrados[productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1) == seleccion].iloc[0]
+    mostrar_producto_completo(producto_seleccionado)
 
 # Ver lista por categorías
 if st.checkbox('Ver lista por Categorías'):
