@@ -10,7 +10,8 @@ def load_data():
     df = pd.read_excel('1083.xlsx', engine='openpyxl')  # Cargar el archivo Excel
     return df
 
-# Función para cargar la imagen desde una URL
+# Función para cargar la imagen desde una URL con caché
+@st.cache_data
 def cargar_imagen(url):
     try:
         response = requests.get(url)
@@ -124,14 +125,16 @@ if ver_por_categorias:
     categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
     if categoria_seleccionada:
         productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada)]
-        pagina = st.number_input('Página:', min_value=1, value=1)
+        num_paginas = (len(productos_categoria) // 10) + 1
+        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         mostrar_lista_productos(productos_categoria, pagina)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
     if 'Fecha Creado' in df.columns:
         df_ordenado = df.sort_values('Fecha Creado', ascending=False)
-        pagina = st.number_input('Página:', min_value=1, value=1)
+        num_paginas = (len(df_ordenado) // 10) + 1
+        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         mostrar_lista_productos(df_ordenado, pagina)
     else:
         st.warning("No se encontró la columna 'Fecha Creado'.")
