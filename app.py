@@ -92,6 +92,11 @@ st.markdown("<h1 style='text-align: center;'>🐻 Super Buscador de Productos</h
 # Mostrar número de filas y columnas cargadas
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
+# Agregar la fecha del último ítem creado
+if 'Fecha Creado' in df.columns:
+    fecha_ultimo_item = df['Fecha Creado'].max()  # Obtiene la fecha más reciente
+    st.success(f"Actualizado al: {fecha_ultimo_item.strftime('%d/%m/%Y %H:%M:%S')}")  # Formato de fecha y hora
+
 # Campo de búsqueda
 busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
 
