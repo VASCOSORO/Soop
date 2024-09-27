@@ -22,20 +22,20 @@ def cargar_imagen(url):
 # Mostrar producto en formato completo (con imagen)
 def mostrar_producto_completo(producto):
     st.markdown(f"### {producto['Nombre']}")
+    st.write(f"Código: {producto['Codigo']}")  # Mover el código al título
+    st.write(f"Stock: {producto['Stock']}")
+    st.write(f"Precio: {producto['Precio']}")  # Colocar precio bajo el código
+    st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
+    st.write(f"Categorías: {producto['Categorias']}")
+
     imagen_url = producto.get('imagen', '')
     if imagen_url:
         imagen = cargar_imagen(imagen_url)
         if imagen:
-            st.image(imagen, use_column_width=True)  # Mostrar imagen arriba del título
+            st.image(imagen, use_column_width=True)  # Ajustar la imagen
         else:
             st.write("Imagen no disponible.")
-
-    st.write(f"Código: {producto['Codigo']}")
-    st.write(f"Stock: {producto['Stock']}")
-    st.write(f"Precio: {producto['Precio']}")
-    st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
-    st.write(f"Categorías: {producto['Categorias']}")
-
+    
     # Checkbox para mostrar ubicación
     if st.checkbox('Mostrar Ubicación'):
         st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}")
@@ -50,35 +50,26 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
 
     for i, producto in productos_pagina.iterrows():
         st.write(f"### {producto['Nombre']}")
+        st.write(f"Código: {producto['Codigo']}")
+        st.write(f"Stock: {producto['Stock']}")
+        st.write(f"Precio: {producto['Precio']}")  # Colocar precio aquí
+        st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
+        st.write(f"Categorías: {producto['Categorias']}")
         
-        # Mostrar imagen del producto
         imagen_url = producto.get('imagen', '')
         if imagen_url:
             imagen = cargar_imagen(imagen_url)
             if imagen:
-                st.image(imagen, width=100)  # Mostrar imagen en pequeño
+                st.image(imagen, width=120)  # Mostrar imagen un 20% más grande
             else:
                 st.write("Imagen no disponible.")
-        
-        st.write(f"Código: {producto['Codigo']}")
-        st.write(f"Stock: {producto['Stock']}")
-        st.write(f"Precio: {producto['Precio']}")
-        st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
-        st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
     
     total_paginas = (len(df) + productos_por_pagina - 1) // productos_por_pagina
     col1, col2, col3 = st.columns([1, 2, 1])
     
-    # Eliminar el botón de "Página anterior"
-    with col1:
-        pass  # No hay botón anterior
-    
+    # Ajustar los botones de navegación
     with col2:
-        st.write(f"Página {pagina} de {total_paginas}")
-    
-    with col3:
-        # Lógica para no mostrar la opción de página siguiente si está en la última página
         if pagina < total_paginas:
             st.button('Página siguiente', on_click=lambda: st.session_state.update({'pagina': pagina + 1}))
 
@@ -91,7 +82,7 @@ st.markdown("# 🐻 Super Buscador de Productos")
 # Mostrar número de filas y columnas cargadas
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
-# Campo de búsqueda con el comportamiento que describiste
+# Campo de búsqueda
 busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
 
 # Verificar si el usuario ha escrito algo y filtrar productos
@@ -104,10 +95,8 @@ if busqueda:
         producto_seleccionado = productos_filtrados[productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1) == seleccion].iloc[0]
         mostrar_producto_completo(producto_seleccionado)
 
-# Espacio entre el buscador y las opciones
-st.write("\n")  # Esto agrega un espacio en blanco
-
-# Alinear correctamente las opciones
+# Alinear correctamente las opciones con un espacio arriba
+st.write("")  # Espacio
 col_opciones = st.columns(3)
 with col_opciones[0]:
     ver_por_categorias = st.checkbox("Ver lista por Categorías")
@@ -118,9 +107,7 @@ with col_opciones[2]:
 
 # Ver lista por categorías
 if ver_por_categorias:
-    # Asegurarse de mostrar categorías individuales
-    categorias_unicas = sorted(set(df['Categorias'].str.split(',').explode()))
-    categoria = st.selectbox('Categorías:', [''] + categorias_unicas)
+    categoria = st.selectbox('Categorías:', sorted(df['Categorias'].dropna().unique()))
     if categoria:  # Solo proceder si se selecciona una categoría
         productos_categoria = df[df['Categorias'].str.contains(categoria)]
         pagina = st.number_input('Página:', min_value=1, value=1)
