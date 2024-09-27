@@ -86,8 +86,8 @@ st.markdown("# 🐻 Super Buscador de Productos")
 # Mostrar número de filas y columnas cargadas
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
-# Campo de búsqueda con el comportamiento que describiste
-busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
+# Campo de búsqueda
+busqueda = st.text_input("Escribí acá para buscar")
 
 # Verificar si el usuario ha escrito algo y filtrar productos
 if busqueda:
@@ -115,8 +115,9 @@ with col_opciones[2]:
 if ver_por_categorias:
     categoria = st.selectbox('Categorías:', sorted(df['Categorias'].dropna().unique()))
     productos_categoria = df[df['Categorias'].str.contains(categoria)]
-    pagina = st.number_input('Página:', min_value=1, value=1)
-    mostrar_lista_productos(productos_categoria, pagina)
+    if not productos_categoria.empty:
+        pagina = st.number_input('Página:', min_value=1, value=1)
+        mostrar_lista_productos(productos_categoria, pagina)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
