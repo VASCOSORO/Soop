@@ -104,9 +104,6 @@ busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), 
 if busqueda:
     productos_filtrados = df[df['Nombre'].str.contains(busqueda, case=False)]
     if not productos_filtrados.empty:
-        # Eliminar el desplegable de selección
-        # seleccion = st.selectbox("Seleccionar:", productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1))
-
         # Mostrar producto seleccionado
         producto_seleccionado = productos_filtrados.iloc[0]  # Solo muestra el primero
         mostrar_producto_completo(producto_seleccionado)
