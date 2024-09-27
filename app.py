@@ -113,7 +113,9 @@ with col_opciones[2]:
 
 # Ver lista por categorías
 if ver_por_categorias:
-    categoria = st.selectbox('Categorías:', sorted(df['Categorias'].dropna().unique()))
+    # Asegurarse de mostrar categorías individuales
+    categorias_unicas = sorted(set(df['Categorias'].str.split(',').explode()))
+    categoria = st.selectbox('Categorías:', [''] + categorias_unicas)
     if categoria:  # Solo proceder si se selecciona una categoría
         productos_categoria = df[df['Categorias'].str.contains(categoria)]
         pagina = st.number_input('Página:', min_value=1, value=1)
