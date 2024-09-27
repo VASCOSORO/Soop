@@ -87,7 +87,7 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
 df = load_data()
 
 # Título
-st.markdown("<h1 style='text-align: center;'>🐻 Super Buscador de Productos</h1>", unsafe_allow_html=True)  # Centrar título
+st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador de Productos</h1>", unsafe_allow_html=True)  # Cambiar título a Soop Buscador
 
 # Mostrar número de filas y columnas cargadas
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
