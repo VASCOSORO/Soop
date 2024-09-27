@@ -31,10 +31,7 @@ def obtener_color_stock(stock):
 # Mostrar producto en formato completo (con imagen)
 def mostrar_producto_completo(producto):
     st.markdown(f"<h3 style='font-size: 28px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)  # Ajustar tamaño del título
-    st.markdown(f"<span style='font-size: 24px; font-weight: bold;'>Código: {producto['Codigo']}</span>", unsafe_allow_html=True)  # Código
-    stock_color = obtener_color_stock(producto['Stock'])
-    st.markdown(f"<span style='color: {stock_color}; font-size: 24px; font-weight: bold;'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)  # Color del stock
-    st.markdown(f"<span style='font-size: 24px;'>Precio: {producto['Precio']}</span>", unsafe_allow_html=True)  # Aumentar tamaño del precio
+    st.markdown(f"<span style='font-size: 24px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${producto['Precio']} | Stock: {producto['Stock']}</span>", unsafe_allow_html=True)  # Mostrar código, precio y stock
 
     imagen_url = producto.get('imagen', '')
     if imagen_url:
@@ -64,10 +61,9 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
 
     for i, producto in productos_pagina.iterrows():
         st.write(f"### {producto['Nombre']}")
-        st.markdown(f"Código: {producto['Codigo']}")
+        st.markdown(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | Stock: {producto['Stock']}", unsafe_allow_html=True)  # Cambiar color del stock
         stock_color = obtener_color_stock(producto['Stock'])
         st.markdown(f"<span style='color: {stock_color}; font-size: 20px;'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
-        st.markdown(f"<span style='font-size: 20px;'>Precio: {producto['Precio']}</span>", unsafe_allow_html=True)  # Aumentar tamaño del precio
         st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
         st.write(f"Categorías: {producto['Categorias']}")
         
