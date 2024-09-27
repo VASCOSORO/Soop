@@ -7,7 +7,8 @@ from io import BytesIO
 # Cargar el archivo Excel
 @st.cache_data
 def load_data():
-    df = pd.read_excel('1083.xlsx', engine='openpyxl')  # Asegúrate de que el archivo Excel esté en el mismo directorio y se carguen todas las filas
+    # Asegúrate de que el archivo Excel esté en el mismo directorio y se carguen todas las filas
+    df = pd.read_excel('1083.xlsx', engine='openpyxl')  
     return df
 
 # Función para cargar la imagen desde una URL
@@ -32,14 +33,27 @@ def obtener_color_stock(stock):
 
 # Mostrar producto en formato completo (con imagen)
 def mostrar_producto_completo(producto):
-    st.markdown(f"<h3 style='font-size: 28px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)  # Ajustar tamaño del título
-    st.markdown(f"<span style='font-size: 24px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${producto['Precio']} | Stock: {producto['Stock']}</span>", unsafe_allow_html=True)  # Mostrar código, precio y stock
+    # Aumentar el tamaño del título en un 20%
+    st.markdown(f"<h3 style='font-size: 33.6px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)  
+    
+    # Mostrar Código, Precio y STOCK con la palabra "STOCK" y color basado en el valor
+    stock_color = obtener_color_stock(producto['Stock'])
+    st.markdown(
+        f"""
+        <span style='font-size: 24px; font-weight: bold;'>
+            Código: {producto['Codigo']} | Precio: ${producto['Precio']} | 
+            <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>
+        </span>
+        """,
+        unsafe_allow_html=True
+    )
 
     imagen_url = producto.get('imagen', '')
     if imagen_url:
         imagen = cargar_imagen(imagen_url)
         if imagen:
-            st.image(imagen, use_column_width=True)
+            # Reducir el tamaño de la imagen en un 30%
+            st.image(imagen, width=140)  # Ajusta el valor de width según sea necesario
         else:
             st.write("Imagen no disponible.")
 
@@ -75,7 +89,13 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
         with col2:
             st.write(f"### {producto['Nombre']}")
             stock_color = obtener_color_stock(producto['Stock'])
-            st.markdown(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
+            st.markdown(
+                f"""
+                Código: {producto['Codigo']} | Precio: ${producto['Precio']} | 
+                <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>
+                """,
+                unsafe_allow_html=True
+            )
             st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
             st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
