@@ -99,8 +99,10 @@ if busqueda:
         producto_seleccionado = productos_filtrados[productos_filtrados.apply(lambda row: f"{row['Nombre']} (Código: {row['Codigo']})", axis=1) == seleccion].iloc[0]
         mostrar_producto_completo(producto_seleccionado)
 
-# Alinear correctamente las opciones con un espacio arriba
-st.write("")  # Espacio
+# Espacio entre el buscador y las opciones
+st.write("\n")  # Esto agrega un espacio en blanco
+
+# Alinear correctamente las opciones
 col_opciones = st.columns(3)
 with col_opciones[0]:
     ver_por_categorias = st.checkbox("Ver lista por Categorías")
