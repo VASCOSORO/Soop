@@ -46,8 +46,10 @@ def mostrar_producto_completo(producto):
     # Mostrar descripción debajo de la imagen
     st.markdown(f"<p style='font-size: 26px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
     
-    # Mostrar categorías debajo de la descripción
-    st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
+    # Mostrar categorías individualmente debajo de la descripción
+    categorias = producto['Categorias'].split(',')  # Separar categorías por coma
+    for categoria in categorias:
+        st.write(f"<p style='font-size: 24px;'>Categoría: {categoria.strip()}</p>", unsafe_allow_html=True)  # Mostrar cada categoría
 
     # Checkbox para mostrar ubicación
     if st.checkbox('Mostrar Ubicación'):
@@ -77,7 +79,9 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
             stock_color = obtener_color_stock(producto['Stock'])
             st.markdown(f"Código: {producto['Codigo']} | Precio: ${producto['Precio']} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
             st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
-            st.write(f"Categorías: {producto['Categorias']}")
+            categorias = producto['Categorias'].split(',')  # Separar categorías por coma
+            for categoria in categorias:
+                st.write(f"Categoría: {categoria.strip()}")  # Mostrar cada categoría
         st.write("---")
     
     total_paginas = (len(df) + productos_por_pagina - 1) // productos_por_pagina
