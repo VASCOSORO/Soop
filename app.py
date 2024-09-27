@@ -95,26 +95,9 @@ st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archiv
 # Campo de búsqueda
 busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
 
-# Mostrar la imagen del bot debajo del buscador
-st.markdown("<div id='bot-image'><img src='bot (8).png' width='200' style='display: block; margin: auto;'></div>", unsafe_allow_html=True)
-
-# JavaScript para ocultar la imagen al poner el mouse sobre el buscador
-st.markdown(
-    """
-    <script>
-    const input = document.querySelector('input[type="text"]');
-    const botImage = document.getElementById('bot-image');
-    
-    input.addEventListener('mouseover', function() {
-        botImage.style.display = 'none';
-    });
-    input.addEventListener('mouseout', function() {
-        botImage.style.display = 'block';
-    });
-    </script>
-    """,
-    unsafe_allow_html=True
-)
+# Condición para mostrar la imagen del bot
+if busqueda == '':
+    st.image('bot (8).png', width=200)  # Mostrar imagen solo si el buscador está vacío
 
 # Verificar si el usuario ha escrito algo y filtrar productos
 if busqueda:
