@@ -19,12 +19,22 @@ def cargar_imagen(url):
     except:
         return None
 
+# Función para cambiar el color del stock
+def obtener_color_stock(stock):
+    if stock > 5:
+        return 'green'
+    elif stock < 3:
+        return 'red'
+    else:
+        return 'orange'
+
 # Mostrar producto en formato completo (con imagen)
 def mostrar_producto_completo(producto):
-    st.markdown(f"### {producto['Nombre']}")
-    st.write(f"Código: {producto['Codigo']}")  # Mover el código al título
-    st.write(f"Stock: {producto['Stock']}")
-    st.write(f"Precio: {producto['Precio']}")  # Colocar precio bajo el código
+    st.markdown(f"### {producto['Nombre']}", unsafe_allow_html=True)
+    st.markdown(f"<span style='font-size: 20px; font-weight: bold;'>Código: {producto['Codigo']}</span>", unsafe_allow_html=True)  # Aumentar tamaño del código
+    stock_color = obtener_color_stock(producto['Stock'])
+    st.markdown(f"<span style='color: {stock_color}; font-weight: bold;'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
+    st.write(f"Precio: {producto['Precio']}")
     st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
     st.write(f"Categorías: {producto['Categorias']}")
 
@@ -32,7 +42,7 @@ def mostrar_producto_completo(producto):
     if imagen_url:
         imagen = cargar_imagen(imagen_url)
         if imagen:
-            st.image(imagen, use_column_width=True)  # Ajustar la imagen
+            st.image(imagen, use_column_width=True)
         else:
             st.write("Imagen no disponible.")
     
@@ -50,9 +60,10 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
 
     for i, producto in productos_pagina.iterrows():
         st.write(f"### {producto['Nombre']}")
-        st.write(f"Código: {producto['Codigo']}")
-        st.write(f"Stock: {producto['Stock']}")
-        st.write(f"Precio: {producto['Precio']}")  # Colocar precio aquí
+        st.markdown(f"Código: {producto['Codigo']}")
+        stock_color = obtener_color_stock(producto['Stock'])
+        st.markdown(f"<span style='color: {stock_color};'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)  # Cambiar color del stock
+        st.write(f"Precio: {producto['Precio']}")
         st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
         st.write(f"Categorías: {producto['Categorias']}")
         
@@ -77,7 +88,7 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
 df = load_data()
 
 # Título
-st.markdown("# 🐻 Super Buscador de Productos")
+st.markdown("<h1 style='text-align: center;'>🐻 Super Buscador de Productos</h1>", unsafe_allow_html=True)  # Centrar título
 
 # Mostrar número de filas y columnas cargadas
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
