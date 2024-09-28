@@ -129,7 +129,16 @@ st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador de Productos</h1
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
 # Campo de búsqueda
-busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
+busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre'].dropna()), index=0)
+
+# Verificar si se selecciona algo en el selectbox y que no sea vacío
+if busqueda.strip() != "":
+    productos_filtrados = df[df['Nombre'].str.contains(busqueda.strip(), case=False)]
+    if not productos_filtrados.empty:
+        producto_seleccionado = productos_filtrados.iloc[0]
+        mostrar_producto_completo(producto_seleccionado)
+    else:
+        st.write(f"No se encontró el producto '{busqueda}'.")
 
 # Variables para verificar si se tildaron las casillas
 col_opciones = st.columns(3)
@@ -139,17 +148,6 @@ with col_opciones[1]:
     ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
 with col_opciones[2]:
     sugerir_por_rubro = st.checkbox("Sugerir por Rubro (Próximamente)")
-
-# Condición para mostrar la imagen del bot
-if busqueda == '' and not (ver_por_categorias or ordenar_por_novedad or sugerir_por_rubro):
-    st.image('bot (8).png', width=480, use_column_width='auto')
-
-# Verificar si el usuario ha escrito algo y filtrar productos
-if busqueda:
-    productos_filtrados = df[df['Nombre'].str.contains(busqueda, case=False)]
-    if not productos_filtrados.empty:
-        producto_seleccionado = productos_filtrados.iloc[0]
-        mostrar_producto_completo(producto_seleccionado)
 
 # Ver lista por categorías
 if ver_por_categorias:
@@ -172,4 +170,3 @@ if ordenar_por_novedad:
         num_paginas = (len(df_ordenado) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         mostrar_lista_productos(df_ordenado, pagina)
-   
