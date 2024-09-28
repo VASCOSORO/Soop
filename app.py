@@ -5,6 +5,10 @@ import requests
 from io import BytesIO
 from datetime import datetime
 import os
+import pytz  # Para manejar zonas horarias
+
+# Definir la zona horaria de Argentina
+tz_argentina = pytz.timezone('America/Argentina/Buenos_Aires')
 
 # Función para cargar el archivo Excel
 @st.cache_data
@@ -12,11 +16,14 @@ def load_data():
     df = pd.read_excel('1083.xlsx', engine='openpyxl')  # Cargar el archivo Excel
     return df
 
-# Función para obtener la fecha de última modificación del archivo
+# Función para obtener la fecha de última modificación del archivo en hora de Argentina
 def obtener_fecha_modificacion(archivo):
     try:
+        # Obtener el timestamp de la última modificación del archivo
         timestamp = os.path.getmtime(archivo)
-        return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+        # Convertir el timestamp a hora de Argentina
+        fecha_mod_argentina = datetime.fromtimestamp(timestamp, tz_argentina)
+        return fecha_mod_argentina.strftime("%Y-%m-%d %H:%M:%S")
     except FileNotFoundError:
         return "Archivo no encontrado"
 
