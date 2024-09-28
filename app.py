@@ -4,12 +4,21 @@ from PIL import Image
 import requests
 from io import BytesIO
 from datetime import datetime
+import os
 
 # Función para cargar el archivo Excel
 @st.cache_data
 def load_data():
     df = pd.read_excel('1083.xlsx', engine='openpyxl')  # Cargar el archivo Excel
     return df
+
+# Función para obtener la fecha de última modificación del archivo
+def obtener_fecha_modificacion(archivo):
+    try:
+        timestamp = os.path.getmtime(archivo)
+        return datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S")
+    except FileNotFoundError:
+        return "Archivo no encontrado"
 
 # Función para cargar la imagen desde una URL con caché
 @st.cache_data
@@ -84,20 +93,18 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
             st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
 
-# Variable global para guardar la fecha de la última actualización
-if 'last_update' not in st.session_state:
-    st.session_state['last_update'] = 'Nunca'
+# Obtener la fecha de la última modificación del archivo
+fecha_ultima_modificacion = obtener_fecha_modificacion('1083.xlsx')
 
 # Crear columnas para mostrar la fecha de última actualización y el botón
 col1, col2, col3 = st.columns([1, 1, 1])
 
 with col1:
-    st.write(f"Última actualización: {st.session_state['last_update']}")
+    st.write(f"Última actualización del archivo: {fecha_ultima_modificacion}")
 
 with col3:
     if st.button('Actualizar datos'):
         st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
-        st.session_state['last_update'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Actualizar la fecha
 
 # Cargar datos
 df = load_data()
