@@ -178,9 +178,3 @@ if ordenar_por_novedad:
 # Sugerir por Rubro (en desarrollo)
 if sugerir_por_rubro:
     st.info("Esta función estará disponible próximamente.")
-
-# Footer: Powered by VASCO.SORO
-st.markdown("""
-    <div style='text-align: center; padding: 10px; font-size: 14px;'>
-        Powered by <strong>VASCO.SORO</strong>
-    </div
