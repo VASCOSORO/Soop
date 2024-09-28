@@ -189,4 +189,17 @@ def agregar_footer():
         bottom: 0;
         width: 100%;
         background-color: #f1f1f1;
-       
+        color: #555;
+        text-align: center;
+        padding: 10px;
+        font-size: 14px;
+    }
+    </style>
+    <div class="footer">
+        Powered by <strong>VASCO.SORO</strong>
+    </div>
+    """
+    st.markdown(footer, unsafe_allow_html=True)
+
+# Llamada a la función del footer
+agregar_footer()
