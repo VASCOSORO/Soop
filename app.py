@@ -1,4 +1,3 @@
-import os
 import streamlit as st
 import pandas as pd
 from PIL import Image
@@ -44,18 +43,8 @@ with col3:
 # Cargar el archivo Excel
 @st.cache_data
 def load_data():
-    file_path = '1083.xlsx'  # Archivo que se debería cargar
-    try:
-        # Asegurar que el archivo exista y pueda ser cargado correctamente
-        df = pd.read_excel(file_path, engine='openpyxl')
-        st.success(f"Se cargó correctamente el archivo {file_path}")
-        return df
-    except FileNotFoundError:
-        st.error(f"El archivo {file_path} no existe o no puede ser encontrado. Asegurate de que esté en la ubicación correcta.")
-        return None
-    except Exception as e:
-        st.error(f"Ocurrió un error al cargar el archivo: {str(e)}")
-        return None
+    df = pd.read_excel('1083.xlsx', engine='openpyxl')  # Cargar el archivo Excel
+    return df
 
 # Función para cargar la imagen desde una URL con caché
 @st.cache_data
@@ -136,52 +125,56 @@ df = load_data()
 # Título
 st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador de Productos</h1>", unsafe_allow_html=True)
 
-# Verificar si se cargaron datos correctamente
-if df is not None:
-    # Mostrar número de filas y columnas cargadas
-    st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
+# Mostrar número de filas y columnas cargadas
+st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
-    # Campo de búsqueda
-    busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
+# Campo de búsqueda
+busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre']), index=0)
 
-    # Variables para verificar si se tildaron las casillas
-    col_opciones = st.columns(3)
-    with col_opciones[0]:
-        ver_por_categorias = st.checkbox("Ver lista por Categorías")
-    with col_opciones[1]:
-        ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
-    with col_opciones[2]:
-        sugerir_por_rubro = st.checkbox("Sugerir por Rubro (Próximamente)")
+# Variables para verificar si se tildaron las casillas
+col_opciones = st.columns(3)
+with col_opciones[0]:
+    ver_por_categorias = st.checkbox("Ver lista por Categorías")
+with col_opciones[1]:
+    ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
+with col_opciones[2]:
+    sugerir_por_rubro = st.checkbox("Sugerir por Rubro (Próximamente)")
 
-    # Verificar si el usuario ha escrito algo y filtrar productos
-    if busqueda:
-        productos_filtrados = df[df['Nombre'].str.contains(busqueda, case=False)]
-        if not productos_filtrados.empty:
-            producto_seleccionado = productos_filtrados.iloc[0]
-            mostrar_producto_completo(producto_seleccionado)
+# Condición para mostrar la imagen del bot
+if busqueda == '' and not (ver_por_categorias or ordenar_por_novedad or sugerir_por_rubro):
+    st.image('bot (8).png', width=480, use_column_width='auto')
 
-    # Ver lista por categorías
-    if ver_por_categorias:
-        todas_las_categorias = df['Categorias'].dropna().unique()
-        categorias_individuales = set()
-        for categorias in todas_las_categorias:
-            for categoria in categorias.split(','):
-                categorias_individuales.add(categoria.strip())
-        categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
-        if categoria_seleccionada:
-            productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada)]
-            num_paginas = (len(productos_categoria) // 10) + 1
-            pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-            mostrar_lista_productos(productos_categoria, pagina)
+# Verificar si el usuario ha escrito algo y filtrar productos
+if busqueda:
+    productos_filtrados = df[df['Nombre'].str.contains(busqueda, case=False)]
+    if not productos_filtrados.empty:
+        producto_seleccionado = productos_filtrados.iloc[0]
+        mostrar_producto_completo(producto_seleccionado)
 
-    # Ordenar por novedad
-    if ordenar_por_novedad:
-        if 'Fecha Creado' in df.columns:
-            df_ordenado = df.sort_values('Fecha Creado', ascending=False)
-            num_paginas = (len(df_ordenado) // 10) + 1
-            pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-            mostrar_lista_productos(df_ordenado, pagina)
-        else:
-            st.warning("No se encontró la columna 'Fecha Creado'.")
+# Ver lista por categorías
+if ver_por_categorias:
+    todas_las_categorias = df['Categorias'].dropna().unique()
+    categorias_individuales = set()
+    for categorias in todas_las_categorias:
+        for categoria in categorias.split(','):
+            categorias_individuales.add(categoria.strip())
+    categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
+    if categoria_seleccionada:
+        productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada)]
+        num_paginas = (len(productos_categoria) // 10) + 1
+        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
+        mostrar_lista_productos(productos_categoria, pagina)
 
-    # Sugerir por Rub
+# Ordenar por novedad
+if ordenar_por_novedad:
+    if 'Fecha Creado' in df.columns:
+        df_ordenado = df.sort_values('Fecha Creado', ascending=False)
+        num_paginas = (len(df_ordenado) // 10) + 1
+        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
+        mostrar_lista_productos(df_ordenado, pagina)
+    else:
+        st.warning("No se encontró la columna 'Fecha Creado'.")
+
+# Sugerir por Rubro (en desarrollo)
+if sugerir_por_rubro:
+    st.info("Esta función estará disponible próximamente.")
