@@ -4,28 +4,38 @@ from PIL import Image
 import requests
 from io import BytesIO
 from datetime import datetime
-import os
-import pytz  # Para manejar zonas horarias
 
-# Definir la zona horaria de Argentina
-tz_argentina = pytz.timezone('America/Argentina/Buenos_Aires')
+# Función para obtener la fecha de la última modificación del archivo en GitHub
+def obtener_fecha_modificacion_github(usuario, repo, archivo):
+    url = f"https://api.github.com/repos/{usuario}/{repo}/commits?path={archivo}&per_page=1"
+    response = requests.get(url)
+    if response.status_code == 200:
+        commit_data = response.json()[0]
+        fecha_utc = commit_data['commit']['committer']['date']
+        # Convertir la fecha a un formato legible y ajustado a la zona horaria de Argentina
+        fecha_utc = datetime.strptime(fecha_utc, "%Y-%m-%dT%H:%M:%SZ")
+        return fecha_utc.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        return "No se pudo obtener la fecha de actualización"
 
-# Función para cargar el archivo Excel
+# Definir los detalles del repositorio
+usuario = "VASCOSORO"  # Tu usuario de GitHub
+repo = "Soop"  # El nombre de tu repositorio
+archivo = "1083.xlsx"  # El archivo del cual querés obtener la fecha
+
+# Obtener la fecha de la última modificación del archivo en GitHub
+fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
+
+# Mostrar la fecha de la última modificación en la interfaz
+col1, col2, col3 = st.columns([1, 1, 1])
+with col1:
+    st.write(f"Última actualización en GitHub del archivo {archivo}: {fecha_ultima_modificacion}")
+
+# Cargar el archivo Excel
 @st.cache_data
 def load_data():
     df = pd.read_excel('1083.xlsx', engine='openpyxl')  # Cargar el archivo Excel
     return df
-
-# Función para obtener la fecha de última modificación del archivo en hora de Argentina
-def obtener_fecha_modificacion(archivo):
-    try:
-        # Obtener el timestamp de la última modificación del archivo
-        timestamp = os.path.getmtime(archivo)
-        # Convertir el timestamp a hora de Argentina
-        fecha_mod_argentina = datetime.fromtimestamp(timestamp, tz_argentina)
-        return fecha_mod_argentina.strftime("%Y-%m-%d %H:%M:%S")
-    except FileNotFoundError:
-        return "Archivo no encontrado"
 
 # Función para cargar la imagen desde una URL con caché
 @st.cache_data
@@ -99,19 +109,6 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
             st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
             st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
-
-# Obtener la fecha de la última modificación del archivo
-fecha_ultima_modificacion = obtener_fecha_modificacion('1083.xlsx')
-
-# Crear columnas para mostrar la fecha de última actualización y el botón
-col1, col2, col3 = st.columns([1, 1, 1])
-
-with col1:
-    st.write(f"Última modificación del archivo: {fecha_ultima_modificacion}")
-
-with col3:
-    if st.button('Actualizar datos'):
-        st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
 
 # Cargar datos
 df = load_data()
