@@ -26,7 +26,7 @@ def obtener_fecha_modificacion_github(usuario, repo, archivo):
 # Definir los detalles del repositorio
 usuario = "VASCOSORO"  # Tu usuario de GitHub
 repo = "Soop"  # El nombre de tu repositorio
-archivo = "1083.xlsx"  # El archivo del cual querés obtener la fecha
+archivo = "1084.xlsx"  # El archivo del cual querés obtener la fecha
 
 # Obtener la fecha de la última modificación del archivo en GitHub
 fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
@@ -43,7 +43,7 @@ with col3:
 # Cargar el archivo Excel
 @st.cache_data
 def load_data():
-    df = pd.read_excel('1083.xlsx', engine='openpyxl')  # Cargar el archivo Excel
+    df = pd.read_excel('1084.xlsx', engine='openpyxl')  # Cargar el archivo Excel
     return df
 
 # Función para cargar la imagen desde una URL con caché
