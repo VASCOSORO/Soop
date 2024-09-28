@@ -83,9 +83,12 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
             st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
 
-# Botón para limpiar caché y recargar archivo
-if st.button('Actualizar datos'):
-    st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
+# Crear una columna para colocar el botón a la derecha
+col1, col2, col3 = st.columns([1, 1, 1])
+
+with col3:
+    if st.button('Actualizar datos'):
+        st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
 
 # Cargar datos
 df = load_data()
