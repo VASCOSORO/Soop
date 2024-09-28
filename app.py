@@ -43,7 +43,7 @@ with col3:
 # Cargar el archivo Excel
 @st.cache_data
 def load_data():
-    df = pd.read_excel('1083.xlsx', engine='openpyxl')  # Cargar el archivo Excel
+    df = pd.read_excel('1083.xlsx', engine='openpyxl', header=0)  # Asegurar que se leen todas las filas desde la primera
     return df
 
 # Función para cargar la imagen desde una URL con caché
@@ -146,7 +146,7 @@ if busqueda == '' and not (ver_por_categorias or ordenar_por_novedad or sugerir_
 
 # Verificar si el usuario ha escrito algo y filtrar productos
 if busqueda:
-    productos_filtrados = df[df['Nombre'].str.contains(busqueda, case=False)]
+    productos_filtrados = df[df['Nombre'].str.contains(busqueda, case=False, na=False)]
     if not productos_filtrados.empty:
         producto_seleccionado = productos_filtrados.iloc[0]
         mostrar_producto_completo(producto_seleccionado)
