@@ -156,7 +156,7 @@ if ver_por_categorias:
     todas_las_categorias = df['Categorias'].dropna().unique()
     categorias_individuales = set()
     for categorias in todas_las_categorias:
-        for categoria in categorias.split(','):
+        for categoria en categorias.split(','):
             categorias_individuales.add(categoria.strip())
     categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
     if categoria_seleccionada:
@@ -178,12 +178,15 @@ if ordenar_por_novedad:
 # Sugerir por Rubro (en desarrollo)
 if sugerir_por_rubro:
     st.info("Esta función estará disponible próximamente.")
-    </style>
-    <div class="footer">
-        Powered by VASCO.SORO
-    </div>
-    """
-    st.markdown(footer, unsafe_allow_html=True)
 
-# Llamamos a la función para el footer
-agregar_footer()
+# Footer: Powered by VASCO.SORO
+def agregar_footer():
+    footer = """
+    <style>
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: #f1f1f1;
+       
