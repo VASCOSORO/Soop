@@ -178,3 +178,12 @@ if ordenar_por_novedad:
 # Sugerir por Rubro (en desarrollo)
 if sugerir_por_rubro:
     st.info("Esta función estará disponible próximamente.")
+    </style>
+    <div class="footer">
+        Powered by VASCO.SORO
+    </div>
+    """
+    st.markdown(footer, unsafe_allow_html=True)
+
+# Llamamos a la función para el footer
+agregar_footer()
