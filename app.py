@@ -4,6 +4,10 @@ from PIL import Image
 import requests
 from io import BytesIO
 from datetime import datetime
+import pytz  # Para manejar zonas horarias
+
+# Definir la zona horaria de Argentina
+tz_argentina = pytz.timezone('America/Argentina/Buenos_Aires')
 
 # Función para obtener la fecha de la última modificación del archivo en GitHub
 def obtener_fecha_modificacion_github(usuario, repo, archivo):
@@ -12,9 +16,10 @@ def obtener_fecha_modificacion_github(usuario, repo, archivo):
     if response.status_code == 200:
         commit_data = response.json()[0]
         fecha_utc = commit_data['commit']['committer']['date']
-        # Convertir la fecha a un formato legible
+        # Convertir la fecha a datetime y luego ajustarla a la zona horaria de Argentina
         fecha_utc = datetime.strptime(fecha_utc, "%Y-%m-%dT%H:%M:%SZ")
-        return fecha_utc.strftime("%Y-%m-%d %H:%M:%S")
+        fecha_argentina = fecha_utc.astimezone(tz_argentina)
+        return fecha_argentina.strftime("%Y-%m-%d %H:%M:%S")
     else:
         return "No se pudo obtener la fecha de actualización"
 
