@@ -153,9 +153,9 @@ if busqueda:
 
 # Ver lista por categorías
 if ver_por_categorias:
-    todas_las_categorias = df['Categorias'].dropna().unique()
+    todas las categorias = df['Categorias'].dropna().unique()
     categorias_individuales = set()
-    for categorias in todas_las_categorias:
+    for categorias in todas las categorias:
         for categoria in categorias.split(','):
             categorias_individuales.add(categoria.strip())
     categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
@@ -184,4 +184,4 @@ st.markdown("""
     <div style='text-align: center; padding: 10px; font-size: 14px;'>
         Powered by <strong>VASCO.SORO</strong>
     </div>
-""",
+""
