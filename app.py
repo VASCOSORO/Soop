@@ -27,9 +27,13 @@ archivo = "1083.xlsx"  # El archivo del cual querés obtener la fecha
 fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
 
 # Mostrar la fecha de la última modificación en la interfaz
-col1, col2, col3 = st.columns([1, 1, 1])
+col1, col2, col3 = st.columns([2, 1, 1])
 with col1:
     st.write(f"Última modificación del archivo {archivo}: {fecha_ultima_modificacion}")
+
+with col3:
+    if st.button('Actualizar datos'):
+        st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
 
 # Cargar el archivo Excel
 @st.cache_data
