@@ -3,8 +3,9 @@ import pandas as pd
 from PIL import Image
 import requests
 from io import BytesIO
+from datetime import datetime
 
-# Cargar el archivo Excel
+# Función para cargar el archivo Excel
 @st.cache_data
 def load_data():
     df = pd.read_excel('1083.xlsx', engine='openpyxl')  # Cargar el archivo Excel
@@ -83,12 +84,20 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
             st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
 
-# Crear una columna para colocar el botón a la derecha
+# Variable global para guardar la fecha de la última actualización
+if 'last_update' not in st.session_state:
+    st.session_state['last_update'] = 'Nunca'
+
+# Crear columnas para mostrar la fecha de última actualización y el botón
 col1, col2, col3 = st.columns([1, 1, 1])
+
+with col1:
+    st.write(f"Última actualización: {st.session_state['last_update']}")
 
 with col3:
     if st.button('Actualizar datos'):
         st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
+        st.session_state['last_update'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Actualizar la fecha
 
 # Cargar datos
 df = load_data()
