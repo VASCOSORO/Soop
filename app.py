@@ -107,7 +107,7 @@ fecha_ultima_modificacion = obtener_fecha_modificacion('1083.xlsx')
 col1, col2, col3 = st.columns([1, 1, 1])
 
 with col1:
-    st.write(f"Última actualización del archivo: {fecha_ultima_modificacion}")
+    st.write(f"Última modificación del archivo: {fecha_ultima_modificacion}")
 
 with col3:
     if st.button('Actualizar datos'):
