@@ -182,4 +182,5 @@ if sugerir_por_rubro:
 # Footer: Powered by VASCO.SORO
 st.markdown("""
     <div style='text-align: center; padding: 10px; font-size: 14px;'>
-        Powered by <strong>VASCO.S
+        Powered by <strong>VASCO.SORO</strong>
+    </div
