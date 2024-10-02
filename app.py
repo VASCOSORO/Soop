@@ -58,8 +58,8 @@ def obtener_color_stock(stock):
     else:
         return 'black'
 
-# Mostrar producto en formato completo (con imagen)
-def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento, img_size):
+# Mostrar producto en formato completo (con imagen y slider para cambiar tamaño)
+def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
     st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
 
     # Mostrar precio según el checkbox de precio por mayor
@@ -83,14 +83,19 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
     st.markdown(f"<p style='font-size: 26px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
     st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
 
-    # Mostrar la imagen con el tamaño ajustable
-    imagen_url = producto.get('imagen', '')
-    if imagen_url:
-        imagen = cargar_imagen(imagen_url)
-        if imagen:
-            st.image(imagen, width=img_size)  # Usar el tamaño ajustado por el slider
-        else:
-            st.write("Imagen no disponible.")
+    # Mostrar la imagen con el slider justo al lado
+    col_img, col_slider = st.columns([3, 1])
+    with col_img:
+        imagen_url = producto.get('imagen', '')
+        if imagen_url:
+            imagen = cargar_imagen(imagen_url)
+            if imagen:
+                img_size = st.session_state.get('img_size', 300)
+                st.image(imagen, width=img_size)
+            else:
+                st.write("Imagen no disponible.")
+    with col_slider:
+        st.session_state.img_size = st.slider("Tamaño de imagen", min_value=100, max_value=600, value=300)
 
     # Checkbox para mostrar ubicación
     if st.checkbox('Mostrar Ubicación'):
@@ -98,8 +103,8 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
         st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
         st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
 
-# Mostrar productos en formato de lista con imágenes (paginar resultados)
-def mostrar_lista_productos(df, pagina, img_size, productos_por_pagina=10):
+# Mostrar productos en formato de lista con imágenes (paginar resultados, sin slider)
+def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
     inicio = (pagina - 1) * productos_por_pagina
     fin = inicio + productos_por_pagina
     productos_pagina = df.iloc[inicio:fin]
@@ -111,7 +116,7 @@ def mostrar_lista_productos(df, pagina, img_size, productos_por_pagina=10):
             if imagen_url:
                 imagen = cargar_imagen(imagen_url)
                 if imagen:
-                    st.image(imagen, width=img_size)  # Tamaño ajustable de la imagen
+                    st.image(imagen, width=150)  # Tamaño fijo para las imágenes en lista
                 else:
                     st.write("Imagen no disponible.")
 
@@ -185,22 +190,19 @@ with col_nombre:
 if st.session_state.selected_codigo and st.session_state.selected_nombre:
     producto_data = df[df['Codigo'] == st.session_state.selected_codigo].iloc[0]
 
-    # Agregar el checkbox para mostrar precio por mayor, calculador de descuento y slider para ajustar tamaño de imagen
-    col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
+    # Agregar el checkbox para mostrar precio por mayor y calculador de descuento
+    col1, col2 = st.columns([1, 2])
     with col1:
         mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor")
     with col2:
         mostrar_descuento = st.checkbox("Mostrar calculador de descuento")
-    with col3:
-        if mostrar_descuento:
-            descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1, value=0)
-        else:
-            descuento = 0
-    with col4:
-        img_size = st.slider("Tamaño de imagen", min_value=100, max_value=400, value=200)
+    if mostrar_descuento:
+        descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1, value=0)
+    else:
+        descuento = 0
 
-    # Mostrar el producto con las opciones de precio por mayor, descuento y tamaño de imagen ajustable
-    mostrar_producto_completo(producto_data, mostrar_mayorista=mostrar_mayorista, mostrar_descuento=mostrar_descuento, descuento=descuento, img_size=img_size)
+    # Mostrar el producto con las opciones de precio por mayor y descuento
+    mostrar_producto_completo(producto_data, mostrar_mayorista=mostrar_mayorista, mostrar_descuento=mostrar_descuento, descuento=descuento)
 
 # Sección para ver lista por categorías o por novedades
 col_opciones = st.columns(3)
@@ -208,6 +210,8 @@ with col_opciones[0]:
     ver_por_categorias = st.checkbox("Ver lista por Categorías")
 with col_opciones[1]:
     ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
+with col_opciones[2]:
+    st.checkbox("Sugerir por Rubro (Próximamente)")
 
 # Ver lista por categorías
 if ver_por_categorias:
@@ -221,7 +225,7 @@ if ver_por_categorias:
         productos_categoria = df[df['Categorias'].apply(lambda x: categoria_seleccionada in str(x).split(','))]
         num_paginas = (len(productos_categoria) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(productos_categoria, pagina, img_size)
+        mostrar_lista_productos(productos_categoria, pagina)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
@@ -229,7 +233,7 @@ if ordenar_por_novedad:
         df_ordenado = df.sort_values('Fecha Creado', ascending=False)
         num_paginas = (len(df_ordenado) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(df_ordenado, pagina, img_size)
+        mostrar_lista_productos(df_ordenado, pagina)
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
