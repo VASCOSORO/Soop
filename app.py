@@ -132,10 +132,10 @@ if ver_por_categorias:
 
 # Ordenar por novedad y paginar resultados
 if ordenar_por_novedad:
-    if 'Fecha Creada' in df.columns:
+    if 'Fecha Creado' in df.columns:
         # Asegurarse de que la columna esté en formato de fecha
-        df['Fecha Creada'] = pd.to_datetime(df['Fecha Creada'], errors='coerce')
-        df_ordenado = df.sort_values('Fecha Creada', ascending=False).dropna(subset=['Fecha Creada'])
+        df['Fecha Creado'] = pd.to_datetime(df['Fecha Creado'], errors='coerce')
+        df_ordenado = df.sort_values('Fecha Creado', ascending=False).dropna(subset=['Fecha Creado'])
         
         total_paginas = (len(df_ordenado) // 25) + 1
         pagina_actual = st.number_input('Página:', min_value=1, max_value=total_paginas, value=1)
