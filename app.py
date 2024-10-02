@@ -112,8 +112,16 @@ st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador 2.0</h1>", unsaf
 # Mostrar número de filas y columnas cargadas
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
-# Campo de búsqueda
-busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre'].dropna()), index=0)
+# Crear 2 columnas para el buscador por código y el buscador por nombre
+col1, col2 = st.columns(2)
+
+# Campo de búsqueda por código
+with col1:
+    busqueda_codigo = st.text_input("Buscar por Código")
+
+# Campo de búsqueda por nombre
+with col2:
+    busqueda_nombre = st.selectbox("Buscar por Nombre", [''] + list(df['Nombre'].dropna()), index=0)
 
 # Crear 3 columnas para el checkbox de mostrar precio x mayor, el checkbox de mostrar calculador y el input numérico del descuento
 col1, col2, col3 = st.columns(3)
@@ -136,14 +144,20 @@ else:
 # Checkbox para ocultar descripción y categorías
 ocultar_descripcion = st.checkbox("Ocultar descripción y categorías")
 
-# Verificar si se selecciona algo en el selectbox y que no sea vacío
-if busqueda.strip() != "":
-    productos_filtrados = df[df['Nombre'].str.contains(busqueda.strip(), case=False)]
-    if not productos_filtrados.empty:
-        producto_seleccionado = productos_filtrados.iloc[0]
-        mostrar_producto_completo(producto_seleccionado, mostrar_mayorista, descuento, ocultar_descripcion)
-    else:
-        st.write(f"No se encontró el producto '{busqueda}'.")
+# Búsqueda por código o nombre
+if busqueda_codigo.strip() != "":
+    productos_filtrados = df[df['Codigo'].astype(str).str.contains(busqueda_codigo.strip(), case=False)]
+elif busqueda_nombre.strip() != "":
+    productos_filtrados = df[df['Nombre'].str.contains(busqueda_nombre.strip(), case=False)]
+else:
+    productos_filtrados = pd.DataFrame()
+
+# Mostrar el producto si se encontró
+if not productos_filtrados.empty:
+    producto_seleccionado = productos_filtrados.iloc[0]
+    mostrar_producto_completo(producto_seleccionado, mostrar_mayorista, descuento, ocultar_descripcion)
+elif busqueda_codigo.strip() != "" or busqueda_nombre.strip() != "":
+    st.write(f"No se encontró el producto.")
 
 # Variables para verificar si se tildaron las casillas de opciones adicionales
 col_opciones = st.columns(3)
