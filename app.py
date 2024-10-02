@@ -31,15 +31,6 @@ archivo = "1804.xlsx"  # El archivo del cual querés obtener la fecha
 # Obtener la fecha de la última modificación del archivo en GitHub
 fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
 
-# Mostrar la fecha de la última modificación en la interfaz con letra más chica
-col1, col2, col3 = st.columns([2, 1, 1])
-with col1:
-    st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo {archivo}: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
-
-with col3:
-    if st.button('Actualizar datos'):
-        st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
-
 # Cargar el archivo Excel
 @st.cache_data
 def load_data():
@@ -102,19 +93,12 @@ def mostrar_producto_completo(producto, mostrar_mayorista, descuento, ocultar_de
     if not ocultar_descripcion:
         st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
 
-    # Checkbox para mostrar ubicación
-    if st.checkbox('Mostrar Ubicación'):
-        st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}")
-        st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
-        st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
-
 # Cargar datos
 df = load_data()
 
-# Título
+# Título y número de filas y columnas cargadas arriba del título
+st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo 1804.xlsx: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
 st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador 2.0</h1>", unsafe_allow_html=True)
-
-# Mostrar número de filas y columnas cargadas
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
 # Crear 2 columnas para el buscador por código y el buscador por nombre
@@ -166,7 +150,7 @@ else:
     productos_filtrados = pd.DataFrame()
 
 # Mostrar el producto si se encontró
-if not productos_filtrados.empty:
+if not productos_filtrados.empty():
     # Mostrar el producto
     mostrar_producto_completo(productos_filtrados.iloc[0], mostrar_mayorista, descuento, ocultar_descripcion)
 elif busqueda_codigo.strip() != "" or busqueda_nombre.strip() != "":
@@ -184,4 +168,23 @@ if ver_por_categorias:
     todas_las_categorias = df['Categorias'].dropna().unique()
     categorias_individuales = set()
     for categorias in todas_las_categorias:
-       
+        for categoria in categorias.split(','):
+            categorias_individuales.add(categoria.strip())
+    categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
+    if categoria_seleccionada:
+        productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada)]
+        num_paginas = (len(productos_categoria) // 10) + 1
+        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
+        mostrar_lista_productos(productos_categoria, pagina)
+
+# Ordenar por novedad
+if ordenar_por_novedad:
+    if 'Fecha Creado' in df.columns:
+        df_ordenado = df.sort_values('Fecha Creado', ascending=False)
+        num_paginas = (len(df_ordenado) // 10) + 1
+        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
+        mostrar_lista_productos(df_ordenado, pagina)
+
+# Footer
+st.markdown("<hr>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 12px;'>Powered by VASCO.SORO</p>", unsafe_allow_html=True)
