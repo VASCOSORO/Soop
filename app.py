@@ -9,19 +9,22 @@ import pytz  # Para manejar zonas horarias
 # Definir la zona horaria de Argentina
 tz_argentina = pytz.timezone('America/Argentina/Buenos_Aires')
 
-# Función para obtener la fecha de la última modificación del archivo en GitHub
+# Función alternativa para obtener la fecha de la última modificación del archivo en GitHub
 def obtener_fecha_modificacion_github(usuario, repo, archivo):
-    url = f"https://api.github.com/repos/{usuario}/{repo}/commits?path={archivo}&per_page=1"
-    response = requests.get(url)
-    if response.status_code == 200:
-        commit_data = response.json()[0]
-        fecha_utc = commit_data['commit']['committer']['date']
-        # Convertir la fecha a datetime y luego ajustarla a la zona horaria de Argentina
-        fecha_utc = datetime.strptime(fecha_utc, "%Y-%m-%dT%H:%M:%SZ")
-        fecha_argentina = fecha_utc.astimezone(tz_argentina)
-        return fecha_argentina.strftime("%Y-%m-%d %H:%M:%S")
-    else:
-        return "No se pudo obtener la fecha de actualización"
+    try:
+        url = f"https://api.github.com/repos/{usuario}/{repo}/commits?path={archivo}&per_page=1"
+        response = requests.get(url)
+        if response.status_code == 200:
+            commit_data = response.json()[0]
+            fecha_utc = commit_data['commit']['committer']['date']
+            # Convertir la fecha a datetime y luego ajustarla a la zona horaria de Argentina
+            fecha_utc = datetime.strptime(fecha_utc, "%Y-%m-%dT%H:%M:%SZ")
+            fecha_argentina = fecha_utc.astimezone(tz_argentina)
+            return fecha_argentina.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            return "Sin información disponible"
+    except:
+        return "Sin información disponible"
 
 # Definir los detalles del repositorio
 usuario = "VASCOSORO"  # Tu usuario de GitHub
@@ -146,36 +149,21 @@ with col_nombre:
 # Si se selecciona un código y un nombre, mostrar el producto
 if st.session_state.selected_codigo and st.session_state.selected_nombre:
     producto_data = df[df['Codigo'] == st.session_state.selected_codigo].iloc[0]
-    mostrar_producto_completo(producto_data, mostrar_mayorista=False, descuento=0, ocultar_descripcion=False)
 
-# Checkbox para opciones adicionales
-col_opciones = st.columns(3)
-with col_opciones[0]:
-    ver_por_categorias = st.checkbox("Ver lista por Categorías")
-with col_opciones[1]:
-    ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
-
-# Ver lista por categorías
-if ver_por_categorias:
-    todas_las_categorias = df['Categorias'].dropna().unique()
-    categorias_individuales = set()
-    for categorias in todas_las_categorias:
-        for categoria in categorias.split(','):
-            categorias_individuales.add(categoria.strip())
-    categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
-    if categoria_seleccionada:
-        productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada)]
-        num_paginas = (len(productos_categoria) // 10) + 1
-        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(productos_categoria, pagina)
-
-# Ordenar por novedad
-if ordenar_por_novedad:
-    if 'Fecha Creado' in df.columns:
-        df_ordenado = df.sort_values('Fecha Creado', ascending=False)
-        num_paginas = (len(df_ordenado) // 10) + 1
-        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(df_ordenado, pagina)
+    # Agregar el checkbox para mostrar precio por mayor y calcular descuento
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor")
+    with col2:
+        mostrar_descuento = st.checkbox("Mostrar calculador de descuento")
+    with col3:
+        if mostrar_descuento:
+            descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1, value=0)
+        else:
+            descuento = 0
+    
+    # Mostrar el producto con las opciones de precio por mayor y descuento
+    mostrar_producto_completo(producto_data, mostrar_mayorista=mostrar_mayorista, descuento=descuento, ocultar_descripcion=False)
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
