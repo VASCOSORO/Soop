@@ -231,13 +231,22 @@ if ver_por_categorias:
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         mostrar_lista_productos(productos_categoria, pagina)
 
-# Ordenar por novedad
+# Ordenar por novedad y paginar resultados
 if ordenar_por_novedad:
     if 'Fecha Creada' in df.columns:
         df_ordenado = df.sort_values('Fecha Creada', ascending=False)
-        num_paginas = (len(df_ordenado) // 10) + 1
-        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(df_ordenado, pagina)
+        total_paginas = (len(df_ordenado) // 10) + 1
+        pagina_actual = st.number_input('Página:', min_value=1, max_value=total_paginas, value=1)
+        mostrar_lista_productos(df_ordenado, pagina_actual)
+
+        # Navegación entre páginas
+        col_nav = st.columns(2)
+        with col_nav[0]:
+            if st.button("⬅️ Página anterior", disabled=(pagina_actual <= 1)):
+                st.session_state['pagina_actual'] = pagina_actual - 1
+        with col_nav[1]:
+            if st.button("➡️ Página siguiente", disabled=(pagina_actual >= total_paginas)):
+                st.session_state['pagina_actual'] = pagina_actual + 1
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
