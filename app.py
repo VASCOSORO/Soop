@@ -58,7 +58,7 @@ def obtener_color_stock(stock):
     else:
         return 'black'
 
-# Mostrar producto en formato completo (con imagen y slider para cambiar tamaño)
+# Mostrar producto en formato completo (con imagen y control para cambiar tamaño)
 def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
     st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
 
@@ -83,8 +83,8 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
     st.markdown(f"<p style='font-size: 26px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
     st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
 
-    # Mostrar la imagen con el slider vertical al lado
-    col_img, col_slider = st.columns([5, 1])
+    # Mostrar la imagen con botones "+" y "-" para ajustar el tamaño
+    col_img, col_btns = st.columns([5, 1])
     with col_img:
         imagen_url = producto.get('imagen', '')
         if imagen_url:
@@ -94,8 +94,11 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
                 st.image(imagen, width=img_size)
             else:
                 st.write("Imagen no disponible.")
-    with col_slider:
-        st.session_state.img_size = st.slider("Tamaño de imagen", min_value=100, max_value=600, value=300, orientation="vertical")
+    with col_btns:
+        if st.button("+"):
+            st.session_state.img_size = min(st.session_state.get('img_size', 300) + 50, 600)
+        if st.button("-"):
+            st.session_state.img_size = max(st.session_state.get('img_size', 300) - 50, 100)
 
     # Checkbox para mostrar ubicación
     if st.checkbox('Mostrar Ubicación'):
@@ -103,7 +106,7 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
         st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
         st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
 
-# Mostrar productos en formato de lista con imágenes (paginar resultados, sin slider)
+# Mostrar productos en formato de lista con imágenes (paginar resultados, sin control de tamaño)
 def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
     inicio = (pagina - 1) * productos_por_pagina
     fin = inicio + productos_por_pagina
