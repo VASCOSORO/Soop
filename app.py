@@ -5,7 +5,7 @@ import requests
 from io import BytesIO
 from datetime import datetime
 import pytz  # Para manejar zonas horarias
-# ========Soop 2.0.2 
+
 # Definir la zona horaria de Argentina
 tz_argentina = pytz.timezone('America/Argentina/Buenos_Aires')
 
