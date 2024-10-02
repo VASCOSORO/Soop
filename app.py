@@ -68,7 +68,7 @@ def obtener_color_stock(stock):
         return 'black'
 
 # Mostrar producto en formato completo (con imagen)
-def mostrar_producto_completo(producto, mostrar_mayorista, descuento):
+def mostrar_producto_completo(producto, mostrar_mayorista, descuento, ocultar_descripcion):
     st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
 
     # Mostrar precio según el checkbox de precio por mayor
@@ -82,11 +82,10 @@ def mostrar_producto_completo(producto, mostrar_mayorista, descuento):
     precio_formateado = f"{precio_mostrar:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
     st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | {tipo_precio}: ${precio_formateado} | Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
 
-    # Calcular y mostrar precio con descuento si es necesario
-    if descuento > 0:
-        precio_descuento = precio_mostrar * (1 - descuento / 100)
-        st.markdown(f"<span style='font-size: 24px; color:blue;'>Precio con {descuento}% de descuento: ${precio_descuento:,.0f}</span>", unsafe_allow_html=True)
-
+    # Mostrar u ocultar descripción y categorías
+    if not ocultar_descripcion:
+        st.markdown(f"<p style='font-size: 26px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
+    
     imagen_url = producto.get('imagen', '')
     if imagen_url:
         imagen = cargar_imagen(imagen_url)
@@ -94,44 +93,15 @@ def mostrar_producto_completo(producto, mostrar_mayorista, descuento):
             st.image(imagen, use_column_width=True)
         else:
             st.write("Imagen no disponible.")
-
-    # Mostrar descripción debajo de la imagen
-    st.markdown(f"<p style='font-size: 26px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
     
-    # Mostrar categorías debajo de la descripción
-    st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
+    if not ocultar_descripcion:
+        st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
 
     # Checkbox para mostrar ubicación
     if st.checkbox('Mostrar Ubicación'):
         st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}")
         st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
         st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
-
-# Mostrar productos en formato de lista con imágenes (paginar resultados)
-def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
-    inicio = (pagina - 1) * productos_por_pagina
-    fin = inicio + productos_por_pagina
-    productos_pagina = df.iloc[inicio:fin]
-
-    for i, producto in productos_pagina.iterrows():
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            imagen_url = producto.get('imagen', '')
-            if imagen_url:
-                imagen = cargar_imagen(imagen_url)
-                if imagen:
-                    st.image(imagen, width=140)
-                else:
-                    st.write("Imagen no disponible.")
-
-        with col2:
-            st.write(f"### {producto['Nombre']}")
-            stock_color = obtener_color_stock(producto['Stock'])
-            precio_formateado = f"{producto['Precio Jugueterias face']:,.0f}".replace(",", ".")  # Usar el precio de la columna correcta
-            st.markdown(f"Código: {producto['Codigo']} | Precio: ${precio_formateado} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)
-            st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
-            st.write(f"Categorías: {producto['Categorias']}")
-        st.write("---")
 
 # Cargar datos
 df = load_data()
@@ -163,12 +133,15 @@ if mostrar_descuento:
 else:
     descuento = 0
 
+# Checkbox para ocultar descripción y categorías
+ocultar_descripcion = st.checkbox("Ocultar descripción y categorías")
+
 # Verificar si se selecciona algo en el selectbox y que no sea vacío
 if busqueda.strip() != "":
     productos_filtrados = df[df['Nombre'].str.contains(busqueda.strip(), case=False)]
     if not productos_filtrados.empty:
         producto_seleccionado = productos_filtrados.iloc[0]
-        mostrar_producto_completo(producto_seleccionado, mostrar_mayorista, descuento)
+        mostrar_producto_completo(producto_seleccionado, mostrar_mayorista, descuento, ocultar_descripcion)
     else:
         st.write(f"No se encontró el producto '{busqueda}'.")
 
