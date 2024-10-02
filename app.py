@@ -65,7 +65,7 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
 
     # Mostrar precio según el checkbox de precio por mayor
     if mostrar_mayorista:
-        precio_mostrar = producto['Precio']
+        precio_mostrar = producto['Precio x Mayor']
         tipo_precio = "Precio x Mayor"
     else:
         precio_mostrar = producto['Precio']
