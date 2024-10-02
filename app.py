@@ -82,6 +82,11 @@ def mostrar_producto_completo(producto, mostrar_mayorista, descuento, ocultar_de
     precio_formateado = f"{precio_mostrar:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
     st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | {tipo_precio}: ${precio_formateado} | Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
 
+    # Mostrar el precio con descuento si se aplica
+    if descuento > 0:
+        precio_descuento = precio_mostrar * (1 - descuento / 100)
+        st.markdown(f"<span style='font-size: 24px; color:blue;'>Precio con {descuento}% de descuento: ${precio_descuento:,.0f}</span>", unsafe_allow_html=True)
+
     # Mostrar u ocultar descripción y categorías
     if not ocultar_descripcion:
         st.markdown(f"<p style='font-size: 26px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
@@ -155,7 +160,15 @@ else:
 # Mostrar el producto si se encontró
 if not productos_filtrados.empty:
     producto_seleccionado = productos_filtrados.iloc[0]
+    # Mostrar el producto
     mostrar_producto_completo(producto_seleccionado, mostrar_mayorista, descuento, ocultar_descripcion)
+    
+    # Actualizar los valores en los campos de código y nombre según la búsqueda realizada
+    with col1:
+        st.write(f"Código: {producto_seleccionado['Codigo']}")
+    with col2:
+        st.write(f"Nombre: {producto_seleccionado['Nombre']}")
+        
 elif busqueda_codigo.strip() != "" or busqueda_nombre.strip() != "":
     st.write(f"No se encontró el producto.")
 
