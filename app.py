@@ -102,7 +102,7 @@ if st.session_state.selected_codigo and st.session_state.selected_nombre:
     with col2:
         descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1, value=0)
 
-    # Mostrar producto completo
+    # Mostrar producto completo con formato mejorado
     def mostrar_producto_completo(producto, mostrar_mayorista, descuento):
         st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
 
@@ -156,7 +156,7 @@ if ver_por_categorias:
         num_paginas = (len(productos_categoria) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         for i, producto in productos_categoria.iloc[(pagina-1)*10:pagina*10].iterrows():
-            st.write(f"{producto['Nombre']} - {producto['Codigo']}")
+            st.write(f"<span style='font-size: 20px; font-weight: bold;'>{producto['Nombre']}</span> - Código: {producto['Codigo']} | Precio: ${producto['Precio']:,.0f}", unsafe_allow_html=True)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
@@ -165,7 +165,7 @@ if ordenar_por_novedad:
         num_paginas = (len(df_ordenado) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         for i, producto in df_ordenado.iloc[(pagina-1)*10:pagina*10].iterrows():
-            st.write(f"{producto['Nombre']} - {producto['Codigo']}")
+            st.write(f"<span style='font-size: 20px; font-weight: bold;'>{producto['Nombre']}</span> - Código: {producto['Codigo']} | Precio: ${producto['Precio']:,.0f}", unsafe_allow_html=True)
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
