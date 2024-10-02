@@ -31,15 +31,6 @@ archivo = "1804.xlsx"  # El archivo del cual querés obtener la fecha
 # Obtener la fecha de la última modificación del archivo en GitHub
 fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
 
-# Mostrar la fecha de la última modificación en la interfaz con letra más chica
-col1, col2 = st.columns([3, 1])
-with col1:
-    st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo {archivo}: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
-
-with col2:
-    if st.button('Actualizar datos'):
-        st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
-
 # Cargar el archivo Excel
 @st.cache_data
 def load_data():
@@ -137,8 +128,18 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
 # Cargar datos
 df = load_data()
 
-# Mostrar el mensaje de éxito de carga de filas y columnas encima del título
-st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
+# Checkbox para mostrar/ocultar la sección de la fecha y el botón de actualizar
+mostrar_seccion_superior = st.checkbox("Mostrar detalles de archivo y botón de actualización", value=True)
+
+# Si el checkbox está activado, mostrar la sección superior
+if mostrar_seccion_superior:
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo {archivo}: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
+
+    with col2:
+        if st.button('Actualizar datos'):
+            st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
 
 # Línea negra sobre el título y arriba de "Soop Buscador"
 st.markdown("<hr style='border:2px solid black'>", unsafe_allow_html=True)
