@@ -96,67 +96,59 @@ def mostrar_producto_completo(producto, mostrar_mayorista, descuento, ocultar_de
 # Cargar datos
 df = load_data()
 
-# Título y número de filas y columnas cargadas arriba del título
-st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo 1804.xlsx: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
-st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador 2.0</h1>", unsafe_allow_html=True)
+# Mostrar el botón de actualizar arriba y el mensaje de carga de datos justo debajo de la fecha de modificación
+col_modif, col_btn = st.columns([3, 1])
+with col_modif:
+    st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo 1804.xlsx: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
+with col_btn:
+    if st.button('Actualizar datos'):
+        st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
+
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
+# Título del buscador
+st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador 2.0</h1>", unsafe_allow_html=True)
+
+# Inicializar variables en session_state para el buscador
+if 'selected_codigo' not in st.session_state:
+    st.session_state.selected_codigo = ''
+if 'selected_nombre' not in st.session_state:
+    st.session_state.selected_nombre = ''
+
+# Funciones de devolución de llamada para sincronizar código y nombre
+def on_codigo_change():
+    codigo = st.session_state.selected_codigo
+    if codigo:
+        producto_data = df[df['Codigo'] == codigo].iloc[0]
+        st.session_state.selected_nombre = producto_data['Nombre']
+    else:
+        st.session_state.selected_nombre = ''
+
+def on_nombre_change():
+    nombre = st.session_state.selected_nombre
+    if nombre:
+        producto_data = df[df['Nombre'] == nombre].iloc[0]
+        st.session_state.selected_codigo = producto_data['Codigo']
+    else:
+        st.session_state.selected_codigo = ''
+
 # Crear 2 columnas para el buscador por código y el buscador por nombre
-col1, col2 = st.columns(2)
+col_codigo, col_nombre = st.columns([1, 2])
 
-# Campo de búsqueda por código (desplegable)
-with col1:
-    busqueda_codigo = st.selectbox("Buscar por Código", [''] + list(df['Codigo'].dropna().astype(str)), index=0)
+with col_codigo:
+    codigo_lista = [""] + df['Codigo'].astype(str).unique().tolist()
+    st.selectbox("Buscar por Código", codigo_lista, key='selected_codigo', on_change=on_codigo_change)
 
-# Campo de búsqueda por nombre (desplegable)
-with col2:
-    busqueda_nombre = st.selectbox("Buscar por Nombre", [''] + list(df['Nombre'].dropna()), index=0)
+with col_nombre:
+    nombre_lista = [""] + df['Nombre'].unique().tolist()
+    st.selectbox("Buscar por Nombre", nombre_lista, key='selected_nombre', on_change=on_nombre_change)
 
-# Crear 3 columnas para el checkbox de mostrar precio x mayor, el checkbox de mostrar calculador y el input numérico del descuento
-col1, col2, col3 = st.columns(3)
+# Si se selecciona un código y un nombre, mostrar el producto
+if st.session_state.selected_codigo and st.session_state.selected_nombre:
+    producto_data = df[df['Codigo'] == st.session_state.selected_codigo].iloc[0]
+    mostrar_producto_completo(producto_data, mostrar_mayorista=False, descuento=0, ocultar_descripcion=False)
 
-# Checkbox para mostrar precio por mayor
-with col1:
-    mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor")
-
-# Checkbox para mostrar el calculador de descuento
-with col2:
-    mostrar_descuento = st.checkbox("Mostrar calculador de descuento")
-
-# Input numérico para el descuento, solo si se activa el checkbox
-if mostrar_descuento:
-    with col3:
-        descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1, value=0)
-else:
-    descuento = 0
-
-# Checkbox para ocultar descripción y categorías
-ocultar_descripcion = st.checkbox("Ocultar descripción y categorías")
-
-# Sincronizar las búsquedas entre código y nombre
-if busqueda_codigo.strip() != "":
-    productos_filtrados = df[df['Codigo'].astype(str) == busqueda_codigo.strip()]
-    if not productos_filtrados.empty:
-        producto_seleccionado = productos_filtrados.iloc[0]
-        # Actualizar el campo de nombre para que coincida con el código seleccionado
-        busqueda_nombre = producto_seleccionado['Nombre']
-elif busqueda_nombre.strip() != "":
-    productos_filtrados = df[df['Nombre'].str.contains(busqueda_nombre.strip(), case=False)]
-    if not productos_filtrados.empty:
-        producto_seleccionado = productos_filtrados.iloc[0]
-        # Actualizar el campo de código para que coincida con el nombre seleccionado
-        busqueda_codigo = producto_seleccionado['Codigo']
-else:
-    productos_filtrados = pd.DataFrame()
-
-# Mostrar el producto si se encontró
-if not productos_filtrados.empty():
-    # Mostrar el producto
-    mostrar_producto_completo(productos_filtrados.iloc[0], mostrar_mayorista, descuento, ocultar_descripcion)
-elif busqueda_codigo.strip() != "" or busqueda_nombre.strip() != "":
-    st.write(f"No se encontró el producto.")
-
-# Variables para verificar si se tildaron las casillas de opciones adicionales
+# Checkbox para opciones adicionales
 col_opciones = st.columns(3)
 with col_opciones[0]:
     ver_por_categorias = st.checkbox("Ver lista por Categorías")
