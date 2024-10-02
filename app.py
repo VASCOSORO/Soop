@@ -144,7 +144,7 @@ st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archiv
 st.markdown("<hr style='border:2px solid black'>", unsafe_allow_html=True)
 
 # Título
-st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador de Productos</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>🐻 Soop 2.o beta 🧐 </h1>", unsafe_allow_html=True)
 
 # Inicializar variables en session_state para el buscador
 if 'selected_codigo' not in st.session_state:
