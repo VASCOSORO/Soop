@@ -109,6 +109,10 @@ with col_btn:
 
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
+        # Insertar una línea horizontal negra para separar las secciones
+        st.markdown("<hr style='border: 1px solid black;'>", unsafe_allow_html=True)
+
+
 # Título del buscador
 st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador 2.0</h1>", unsafe_allow_html=True)
 
