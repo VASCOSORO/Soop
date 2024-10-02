@@ -6,6 +6,7 @@ from io import BytesIO
 from datetime import datetime
 import pytz  # Para manejar zonas horarias
 
+# ====== Version 2.0.1 ==== Funcionando 
 # Definir la zona horaria de Argentina
 tz_argentina = pytz.timezone('America/Argentina/Buenos_Aires')
 
@@ -62,13 +63,13 @@ def obtener_color_stock(stock):
 def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
     st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
 
-    # Usar la columna "Precio x Mayor" y "Precio" del archivo
+    # Mostrar precio según el checkbox de precio por mayor
     if mostrar_mayorista:
-        precio_mostrar = producto['Precio x Mayor']
+        precio_mostrar = producto['Precio']
         tipo_precio = "Precio x Mayor"
     else:
-        precio_mostrar = producto['Precio']  # Usar la columna "Precio" en lugar de "Precio Jugueterias face"
-        tipo_precio = "Precio Online"  # Asumo que "Precio" es el precio general u online
+        precio_mostrar = producto['Precio Jugueterias face']
+        tipo_precio = "Precio Jugueterías Face"
 
     precio_formateado = f"{precio_mostrar:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
     stock_color = obtener_color_stock(producto['Stock'])  # Cambiar el color del stock según el valor
@@ -81,7 +82,7 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
 
     # Mostrar descripción y categorías
     st.markdown(f"<p style='font-size: 26px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
-    st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Etiquetas']}</p>", unsafe_allow_html=True)
+    st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
 
     # Mostrar la imagen con botones "+" y "-" para ajustar el tamaño
     col_img, col_btns = st.columns([5, 1])
@@ -95,10 +96,10 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
             else:
                 st.write("Imagen no disponible.")
     with col_btns:
-        st.markdown("**Tamaño**")
-        if st.button("🔼 Aumentar"):
+        st.markdown("**Vista**")
+        if st.button("➕"):
             st.session_state.img_size = min(st.session_state.get('img_size', 300) + 50, 600)
-        if st.button("🔽 Disminuir"):
+        if st.button("➖"):
             st.session_state.img_size = max(st.session_state.get('img_size', 300) - 50, 100)
 
     # Checkbox para mostrar ubicación
@@ -130,7 +131,7 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
             precio_formateado = f"{producto['Precio']:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
             st.markdown(f"Código: {producto['Codigo']} | Precio: ${precio_formateado} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)
             st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
-            st.write(f"Categorías: {producto['Etiquetas']}")
+            st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
 
 # Cargar datos
@@ -219,22 +220,22 @@ with col_opciones[2]:
 
 # Ver lista por categorías
 if ver_por_categorias:
-    todas_las_categorias = df['Etiquetas'].dropna().unique()
+    todas_las_categorias = df['Categorias'].dropna().unique()
     categorias_individuales = set()
     for categorias in todas_las_categorias:
         for categoria in categorias.split(','):
             categorias_individuales.add(categoria.strip())
     categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
     if categoria_seleccionada:
-        productos_categoria = df[df['Etiquetas'].apply(lambda x: categoria_seleccionada in str(x).split(','))]
+        productos_categoria = df[df['Categorias'].apply(lambda x: categoria_seleccionada in str(x).split(','))]
         num_paginas = (len(productos_categoria) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         mostrar_lista_productos(productos_categoria, pagina)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
-    if 'Fecha Creada' in df.columns:
-        df_ordenado = df.sort_values('Fecha Creada', ascending=False)
+    if 'Fecha Creado' in df.columns:
+        df_ordenado = df.sort_values('Fecha Creado', ascending=False)
         num_paginas = (len(df_ordenado) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         mostrar_lista_productos(df_ordenado, pagina)
