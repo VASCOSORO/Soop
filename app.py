@@ -68,10 +68,24 @@ def obtener_color_stock(stock):
         return 'black'
 
 # Mostrar producto en formato completo (con imagen)
-def mostrar_producto_completo(producto):
+def mostrar_producto_completo(producto, mostrar_mayorista, descuento):
     st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
-    precio_formateado = f"{producto['Precio Jugueterias face']:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
-    st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${precio_formateado} | Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
+
+    # Mostrar precio según el checkbox de precio por mayor
+    if mostrar_mayorista:
+        precio_mostrar = producto['Precio']
+        tipo_precio = "Precio x Mayor"
+    else:
+        precio_mostrar = producto['Precio Jugueterias face']
+        tipo_precio = "Precio Jugueterías Face"
+
+    precio_formateado = f"{precio_mostrar:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
+    st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | {tipo_precio}: ${precio_formateado} | Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
+
+    # Calcular y mostrar precio con descuento si es necesario
+    if descuento > 0:
+        precio_descuento = precio_mostrar * (1 - descuento / 100)
+        st.markdown(f"<span style='font-size: 24px; color:blue;'>Precio con {descuento}% de descuento: ${precio_descuento:,.0f}</span>", unsafe_allow_html=True)
 
     imagen_url = producto.get('imagen', '')
     if imagen_url:
@@ -93,32 +107,6 @@ def mostrar_producto_completo(producto):
         st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
         st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
 
-# Mostrar productos en formato de lista con imágenes (paginar resultados)
-def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
-    inicio = (pagina - 1) * productos_por_pagina
-    fin = inicio + productos_por_pagina
-    productos_pagina = df.iloc[inicio:fin]
-
-    for i, producto in productos_pagina.iterrows():
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            imagen_url = producto.get('imagen', '')
-            if imagen_url:
-                imagen = cargar_imagen(imagen_url)
-                if imagen:
-                    st.image(imagen, width=140)
-                else:
-                    st.write("Imagen no disponible.")
-
-        with col2:
-            st.write(f"### {producto['Nombre']}")
-            stock_color = obtener_color_stock(producto['Stock'])
-            precio_formateado = f"{producto['Precio']:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
-            st.markdown(f"Código: {producto['Codigo']} | Precio: ${precio_formateado} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)
-            st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
-            st.write(f"Categorías: {producto['Categorias']}")
-        st.write("---")
-
 # Cargar datos
 df = load_data()
 
@@ -131,42 +119,17 @@ st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archiv
 # Campo de búsqueda
 busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre'].dropna()), index=0)
 
+# Checkbox para mostrar precio por mayor
+mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor")
+
+# Desplegable para calcular descuento
+descuento = st.slider("Calcular precio con descuento (%)", min_value=0, max_value=100, value=0)
+
 # Verificar si se selecciona algo en el selectbox y que no sea vacío
 if busqueda.strip() != "":
     productos_filtrados = df[df['Nombre'].str.contains(busqueda.strip(), case=False)]
     if not productos_filtrados.empty:
         producto_seleccionado = productos_filtrados.iloc[0]
-        mostrar_producto_completo(producto_seleccionado)
+        mostrar_producto_completo(producto_seleccionado, mostrar_mayorista, descuento)
     else:
         st.write(f"No se encontró el producto '{busqueda}'.")
-
-# Variables para verificar si se tildaron las casillas
-col_opciones = st.columns(3)
-with col_opciones[0]:
-    ver_por_categorias = st.checkbox("Ver lista por Categorías")
-with col_opciones[1]:
-    ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
-with col_opciones[2]:
-    sugerir_por_rubro = st.checkbox("Sugerir por Rubro (Próximamente)")
-
-# Ver lista por categorías
-if ver_por_categorias:
-    todas_las_categorias = df['Categorias'].dropna().unique()
-    categorias_individuales = set()
-    for categorias in todas_las_categorias:
-        for categoria in categorias.split(','):
-            categorias_individuales.add(categoria.strip())
-    categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
-    if categoria_seleccionada:
-        productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada)]
-        num_paginas = (len(productos_categoria) // 10) + 1
-        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(productos_categoria, pagina)
-
-# Ordenar por novedad
-if ordenar_por_novedad:
-    if 'Fecha Creado' in df.columns:
-        df_ordenado = df.sort_values('Fecha Creado', ascending=False)
-        num_paginas = (len(df_ordenado) // 10) + 1
-        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(df_ordenado, pagina)
