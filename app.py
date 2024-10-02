@@ -111,7 +111,7 @@ def mostrar_producto_completo(producto, mostrar_mayorista, descuento):
 df = load_data()
 
 # Título
-st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador de Productos</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador 2.0</h1>", unsafe_allow_html=True)
 
 # Mostrar número de filas y columnas cargadas
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
@@ -119,11 +119,16 @@ st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archiv
 # Campo de búsqueda
 busqueda = st.selectbox("Escribí acá para buscar", [''] + list(df['Nombre'].dropna()), index=0)
 
-# Checkbox para mostrar precio por mayor
-mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor")
+# Crear 3 columnas para el checkbox de mostrar precio x mayor, el input numérico del descuento y el campo para el descuento
+col1, col2, col3 = st.columns(3)
 
-# Desplegable para calcular descuento
-descuento = st.slider("Calcular precio con descuento (%)", min_value=0, max_value=100, value=0)
+# Checkbox para mostrar precio por mayor
+with col1:
+    mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor")
+
+# Input numérico para el descuento
+with col2:
+    descuento = st.number_input("Calcular precio con descuento (%)", min_value=0, max_value=100, step=1, value=0)
 
 # Verificar si se selecciona algo en el selectbox y que no sea vacío
 if busqueda.strip() != "":
@@ -133,3 +138,7 @@ if busqueda.strip() != "":
         mostrar_producto_completo(producto_seleccionado, mostrar_mayorista, descuento)
     else:
         st.write(f"No se encontró el producto '{busqueda}'.")
+
+# Footer
+st.markdown("<hr>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 12px;'>Powered by VASCO.SORO</p>", unsafe_allow_html=True)
