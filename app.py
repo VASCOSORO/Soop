@@ -68,8 +68,8 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
         precio_mostrar = producto['Precio']
         tipo_precio = "Precio x Mayor"
     else:
-        precio_mostrar = producto['Precio Jugueterias face']
-        tipo_precio = "Precio Jugueterías Face"
+        precio_mostrar = producto['Precio']
+        tipo_precio = "Precio"
 
     precio_formateado = f"{precio_mostrar:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
     stock_color = obtener_color_stock(producto['Stock'])  # Cambiar el color del stock según el valor
