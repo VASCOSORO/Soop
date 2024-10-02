@@ -96,6 +96,12 @@ def mostrar_producto_completo(producto, mostrar_mayorista, descuento, ocultar_de
     if not ocultar_descripcion:
         st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
 
+    # Checkbox para mostrar ubicación
+    if st.checkbox('Mostrar Ubicación'):
+        st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}")
+        st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
+        st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
+
 # Cargar datos
 df = load_data()
 
@@ -108,10 +114,6 @@ with col_btn:
         st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
 
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
-
-        # Insertar una línea horizontal negra para separar las secciones
-        st.markdown("<hr style='border: 1px solid black;'>", unsafe_allow_html=True)
-
 
 # Título del buscador
 st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador 2.0</h1>", unsafe_allow_html=True)
@@ -168,6 +170,39 @@ if st.session_state.selected_codigo and st.session_state.selected_nombre:
     
     # Mostrar el producto con las opciones de precio por mayor y descuento
     mostrar_producto_completo(producto_data, mostrar_mayorista=mostrar_mayorista, descuento=descuento, ocultar_descripcion=False)
+
+# Sección para ver lista por categorías o por novedades
+col_opciones = st.columns(3)
+with col_opciones[0]:
+    ver_por_categorias = st.checkbox("Ver lista por Categorías")
+with col_opciones[1]:
+    ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
+
+# Ver lista por categorías
+if ver_por_categorias:
+    todas_las_categorias = df['Categorias'].dropna().unique()
+    categorias_individuales = set()
+    for categorias in todas_las_categorias:
+        for categoria in categorias.split(','):
+            categorias_individuales.add(categoria.strip())
+    categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
+    if categoria_seleccionada:
+        productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada)]
+        num_paginas = (len(productos_categoria) // 10) + 1
+        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
+        # Aquí podés implementar la función para mostrar la lista de productos
+        for i, producto in productos_categoria.iterrows():
+            st.write(f"{producto['Nombre']} - {producto['Codigo']}")
+
+# Ordenar por novedad
+if ordenar_por_novedad:
+    if 'Fecha Creado' in df.columns:
+        df_ordenado = df.sort_values('Fecha Creado', ascending=False)
+        num_paginas = (len(df_ordenado) // 10) + 1
+        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
+        # Aquí podés implementar la función para mostrar la lista de productos por novedad
+        for i, producto in df_ordenado.iterrows():
+            st.write(f"{producto['Nombre']} - {producto['Codigo']}")
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
