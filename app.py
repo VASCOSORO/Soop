@@ -58,7 +58,47 @@ def obtener_color_stock(stock):
     else:
         return 'black'
 
-# Mostrar productos en formato de lista con imágenes (paginación, sin control de tamaño)
+# Función para mostrar el producto seleccionado
+def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento, img_size):
+    st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
+
+    # Mostrar precio según el checkbox de precio por mayor
+    if mostrar_mayorista:
+        precio_mostrar = producto['Precio']
+        tipo_precio = "Precio x Mayor"
+    else:
+        precio_mostrar = producto['Precio Jugueterias face']
+        tipo_precio = "Precio Jugueterías Face"
+
+    precio_formateado = f"{precio_mostrar:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
+    stock_color = obtener_color_stock(producto['Stock'])  # Cambiar el color del stock según el valor
+    st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | {tipo_precio}: ${precio_formateado} | <span style='color: {stock_color};'>Stock: {producto['Stock']}</span></span>", unsafe_allow_html=True)
+
+    # Mostrar el precio con descuento si se aplica
+    if mostrar_descuento and descuento > 0:
+        precio_descuento = precio_mostrar * (1 - descuento / 100)
+        st.markdown(f"<span style='font-size: 24px; color:blue;'>Precio con {descuento}% de descuento: ${precio_descuento:,.0f}</span>", unsafe_allow_html=True)
+
+    # Mostrar descripción y categorías
+    st.markdown(f"<p style='font-size: 26px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
+    st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
+
+    # Mostrar la imagen con el tamaño ajustable
+    imagen_url = producto.get('imagen', '')
+    if imagen_url:
+        imagen = cargar_imagen(imagen_url)
+        if imagen:
+            st.image(imagen, width=img_size)  # Tamaño ajustado por el slider
+        else:
+            st.write("Imagen no disponible.")
+
+    # Checkbox para mostrar ubicación
+    if st.checkbox('Mostrar Ubicación'):
+        st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}")
+        st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
+        st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
+
+# Mostrar productos en formato de lista con imágenes
 def mostrar_lista_productos(df, pagina, productos_por_pagina=25):
     inicio = (pagina - 1) * productos_por_pagina
     fin = inicio + productos_por_pagina
@@ -81,7 +121,7 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=25):
             precio_formateado = f"{producto['Precio']:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
             st.markdown(f"Código: {producto['Codigo']} | Precio: ${precio_formateado} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)
             st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
-            st.write(f"Categorías: {producto['Etiquetas']}")
+            st.write(f"Categorías: {producto['Categorias']}")
         st.write("---")
 
 # Cargar datos
@@ -107,48 +147,90 @@ st.markdown("<hr style='border:2px solid black'>", unsafe_allow_html=True)
 # Título
 st.markdown("<h1 style='text-align: center;'>🐻 Soop 2.o beta 🧐 </h1>", unsafe_allow_html=True)
 
+# Inicializar variables en session_state para el buscador
+if 'selected_codigo' not in st.session_state:
+    st.session_state.selected_codigo = ''
+if 'selected_nombre' not in st.session_state:
+    st.session_state.selected_nombre = ''
+
+# Funciones de devolución de llamada para sincronizar código y nombre
+def on_codigo_change():
+    codigo = st.session_state.selected_codigo
+    if codigo:
+        producto_data = df[df['Codigo'] == codigo].iloc[0]
+        st.session_state.selected_nombre = producto_data['Nombre']
+    else:
+        st.session_state.selected_nombre = ''
+
+def on_nombre_change():
+    nombre = st.session_state.selected_nombre
+    if nombre:
+        producto_data = df[df['Nombre'] == nombre].iloc[0]
+        st.session_state.selected_codigo = producto_data['Codigo']
+    else:
+        st.session_state.selected_codigo = ''
+
+# Crear 2 columnas para el buscador por código y el buscador por nombre
+col_codigo, col_nombre = st.columns([1, 2])
+
+with col_codigo:
+    codigo_lista = [""] + df['Codigo'].astype(str).unique().tolist()
+    st.selectbox("Buscar por Código", codigo_lista, key='selected_codigo', on_change=on_codigo_change)
+
+with col_nombre:
+    nombre_lista = [""] + df['Nombre'].unique().tolist()
+    st.selectbox("Buscar por Nombre", nombre_lista, key='selected_nombre', on_change=on_nombre_change)
+
+# Si se selecciona un código y un nombre, mostrar el producto
+if st.session_state.selected_codigo and st.session_state.selected_nombre:
+    producto_data = df[df['Codigo'] == st.session_state.selected_codigo].iloc[0]
+
+    # Agregar el checkbox para mostrar precio por mayor, calculador de descuento y slider para ajustar tamaño de imagen
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
+    with col1:
+        mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor")
+    with col2:
+        mostrar_descuento = st.checkbox("Mostrar calculador de descuento")
+    with col3:
+        if mostrar_descuento:
+            descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1, value=0)
+        else:
+            descuento = 0
+    with col4:
+        img_size = st.slider("Tamaño de imagen", min_value=100, max_value=400, value=200)
+
+    # Mostrar el producto con las opciones de precio por mayor, descuento y tamaño de imagen ajustable
+    mostrar_producto_completo(producto_data, mostrar_mayorista=mostrar_mayorista, mostrar_descuento=mostrar_descuento, descuento=descuento, img_size=img_size)
+
 # Sección para ver lista por categorías o por novedades
 col_opciones = st.columns(3)
 with col_opciones[0]:
     ver_por_categorias = st.checkbox("Ver lista por Categorías")
 with col_opciones[1]:
     ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
-with col_opciones[2]:
-    st.checkbox("Sugerir por Rubro (Próximamente)")
 
 # Ver lista por categorías
 if ver_por_categorias:
-    todas_las_categorias = df['Etiquetas'].dropna().unique()
+    todas_las_categorias = df['Categorias'].dropna().unique()
     categorias_individuales = set()
     for categorias in todas_las_categorias:
         for categoria in categorias.split(','):
             categorias_individuales.add(categoria.strip())
     categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
     if categoria_seleccionada:
-        productos_categoria = df[df['Etiquetas'].apply(lambda x: categoria_seleccionada in str(x).split(','))]
+        productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada)]
         num_paginas = (len(productos_categoria) // 25) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         mostrar_lista_productos(productos_categoria, pagina)
 
-# Ordenar por novedad y paginar resultados
+# Ordenar por novedad
 if ordenar_por_novedad:
     if 'Fecha Creado' in df.columns:
-        # Asegurarse de que la columna esté en formato de fecha
         df['Fecha Creado'] = pd.to_datetime(df['Fecha Creado'], errors='coerce')
-        df_ordenado = df.sort_values('Fecha Creado', ascending=False).dropna(subset=['Fecha Creado'])
-        
-        total_paginas = (len(df_ordenado) // 25) + 1
-        pagina_actual = st.number_input('Página:', min_value=1, max_value=total_paginas, value=1)
-        mostrar_lista_productos(df_ordenado, pagina_actual)
-
-        # Botones de navegación entre páginas
-        col_nav = st.columns(2)
-        with col_nav[0]:
-            if st.button("⬅️ Página anterior", disabled=(pagina_actual <= 1)):
-                st.session_state['pagina_actual'] = pagina_actual - 1
-        with col_nav[1]:
-            if st.button("➡️ Página siguiente", disabled=(pagina_actual >= total_paginas)):
-                st.session_state['pagina_actual'] = pagina_actual + 1
+        df_ordenado = df.sort_values('Fecha Creado', ascending=False)
+        num_paginas = (len(df_ordenado) // 25) + 1
+        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
+        mostrar_lista_productos(df_ordenado, pagina)
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
