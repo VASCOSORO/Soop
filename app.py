@@ -137,11 +137,11 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
 # Cargar datos
 df = load_data()
 
-# Línea negra sobre el título y arriba de "Soop Buscador"
-st.markdown("<hr style='border:2px solid black'>", unsafe_allow_html=True)
-
 # Mostrar el mensaje de éxito de carga de filas y columnas encima del título
 st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
+
+# Línea negra sobre el título y arriba de "Soop Buscador"
+st.markdown("<hr style='border:2px solid black'>", unsafe_allow_html=True)
 
 # Título
 st.markdown("<h1 style='text-align: center;'>🐻 Soop Buscador de Productos</h1>", unsafe_allow_html=True)
