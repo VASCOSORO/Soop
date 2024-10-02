@@ -145,7 +145,7 @@ if mostrar_seccion_superior:
 st.markdown("<hr style='border:2px solid black'>", unsafe_allow_html=True)
 
 # Título
-st.markdown("<h1 style='text-align: center;'>🐻 Soop 2.o beta 🧐 </h1>", unsafe_allowhtml=True)
+st.markdown("<h1 style='text-align: center;'>🐻 Soop 2.o beta 🧐 </h1>", unsafe_allow_html=True)
 
 # Inicializar variables en session_state para el buscador
 if 'selected_codigo' not in st.session_state:
@@ -218,7 +218,7 @@ if ver_por_categorias:
             categorias_individuales.add(categoria.strip())
     categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
     if categoria_seleccionada:
-        productos_categoria = df[df['Categorias'].apply(lambda x: categoria_seleccionada in x.split(','))]
+        productos_categoria = df[df['Categorias'].apply(lambda x: categoria_seleccionada in str(x).split(','))]
         num_paginas = (len(productos_categoria) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         mostrar_lista_productos(productos_categoria, pagina, img_size)
