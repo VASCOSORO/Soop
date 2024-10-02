@@ -62,12 +62,20 @@ def obtener_color_stock(stock):
 def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
     st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
 
+    # Asegurar que existan las columnas para los precios
+    precio_mayorista_col = "Precio"
+    precio_jugueterias_col = "Precio Jugueterias face"
+
+    if precio_mayorista_col not in producto or precio_jugueterias_col not in producto:
+        st.error(f"El archivo no contiene las columnas '{precio_mayorista_col}' o '{precio_jugueterias_col}'. Verificá que estén correctamente en el Excel.")
+        return
+
     # Mostrar precio según el checkbox de precio por mayor
     if mostrar_mayorista:
-        precio_mostrar = producto['Precio']
+        precio_mostrar = producto[precio_mayorista_col]
         tipo_precio = "Precio x Mayor"
     else:
-        precio_mostrar = producto['Precio Jugueterias face']
+        precio_mostrar = producto[precio_jugueterias_col]
         tipo_precio = "Precio Jugueterías Face"
 
     precio_formateado = f"{precio_mostrar:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
