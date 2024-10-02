@@ -6,7 +6,6 @@ from io import BytesIO
 from datetime import datetime
 import pytz  # Para manejar zonas horarias
 
-# ============ Version Great ===========
 # Definir la zona horaria de Argentina
 tz_argentina = pytz.timezone('America/Argentina/Buenos_Aires')
 
@@ -96,9 +95,10 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
             else:
                 st.write("Imagen no disponible.")
     with col_btns:
-        if st.button("+"):
+        st.markdown("**Tamaño**")
+        if st.button("🔼 Aumentar"):
             st.session_state.img_size = min(st.session_state.get('img_size', 300) + 50, 600)
-        if st.button("-"):
+        if st.button("🔽 Disminuir"):
             st.session_state.img_size = max(st.session_state.get('img_size', 300) - 50, 100)
 
     # Checkbox para mostrar ubicación
