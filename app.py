@@ -115,11 +115,11 @@ st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archiv
 # Crear 2 columnas para el buscador por código y el buscador por nombre
 col1, col2 = st.columns(2)
 
-# Campo de búsqueda por código
+# Campo de búsqueda por código (desplegable)
 with col1:
-    busqueda_codigo = st.text_input("Buscar por Código")
+    busqueda_codigo = st.selectbox("Buscar por Código", [''] + list(df['Codigo'].dropna().astype(str)), index=0)
 
-# Campo de búsqueda por nombre
+# Campo de búsqueda por nombre (desplegable)
 with col2:
     busqueda_nombre = st.selectbox("Buscar por Nombre", [''] + list(df['Nombre'].dropna()), index=0)
 
@@ -146,7 +146,7 @@ ocultar_descripcion = st.checkbox("Ocultar descripción y categorías")
 
 # Búsqueda por código o nombre
 if busqueda_codigo.strip() != "":
-    productos_filtrados = df[df['Codigo'].astype(str).str.contains(busqueda_codigo.strip(), case=False)]
+    productos_filtrados = df[df['Codigo'].astype(str) == busqueda_codigo.strip()]
 elif busqueda_nombre.strip() != "":
     productos_filtrados = df[df['Nombre'].str.contains(busqueda_nombre.strip(), case=False)]
 else:
