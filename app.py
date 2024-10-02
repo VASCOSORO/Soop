@@ -149,26 +149,26 @@ else:
 # Checkbox para ocultar descripción y categorías
 ocultar_descripcion = st.checkbox("Ocultar descripción y categorías")
 
-# Búsqueda por código o nombre
+# Sincronizar las búsquedas entre código y nombre
 if busqueda_codigo.strip() != "":
     productos_filtrados = df[df['Codigo'].astype(str) == busqueda_codigo.strip()]
+    if not productos_filtrados.empty:
+        producto_seleccionado = productos_filtrados.iloc[0]
+        # Actualizar el campo de nombre para que coincida con el código seleccionado
+        busqueda_nombre = producto_seleccionado['Nombre']
 elif busqueda_nombre.strip() != "":
     productos_filtrados = df[df['Nombre'].str.contains(busqueda_nombre.strip(), case=False)]
+    if not productos_filtrados.empty:
+        producto_seleccionado = productos_filtrados.iloc[0]
+        # Actualizar el campo de código para que coincida con el nombre seleccionado
+        busqueda_codigo = producto_seleccionado['Codigo']
 else:
     productos_filtrados = pd.DataFrame()
 
 # Mostrar el producto si se encontró
 if not productos_filtrados.empty:
-    producto_seleccionado = productos_filtrados.iloc[0]
     # Mostrar el producto
-    mostrar_producto_completo(producto_seleccionado, mostrar_mayorista, descuento, ocultar_descripcion)
-    
-    # Actualizar los valores en los campos de código y nombre según la búsqueda realizada
-    with col1:
-        st.write(f"Código: {producto_seleccionado['Codigo']}")
-    with col2:
-        st.write(f"Nombre: {producto_seleccionado['Nombre']}")
-        
+    mostrar_producto_completo(productos_filtrados.iloc[0], mostrar_mayorista, descuento, ocultar_descripcion)
 elif busqueda_codigo.strip() != "" or busqueda_nombre.strip() != "":
     st.write(f"No se encontró el producto.")
 
@@ -184,23 +184,4 @@ if ver_por_categorias:
     todas_las_categorias = df['Categorias'].dropna().unique()
     categorias_individuales = set()
     for categorias in todas_las_categorias:
-        for categoria in categorias.split(','):
-            categorias_individuales.add(categoria.strip())
-    categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
-    if categoria_seleccionada:
-        productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada)]
-        num_paginas = (len(productos_categoria) // 10) + 1
-        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(productos_categoria, pagina)
-
-# Ordenar por novedad
-if ordenar_por_novedad:
-    if 'Fecha Creado' in df.columns:
-        df_ordenado = df.sort_values('Fecha Creado', ascending=False)
-        num_paginas = (len(df_ordenado) // 10) + 1
-        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(df_ordenado, pagina)
-
-# Footer
-st.markdown("<hr>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 12px;'>Powered by VASCO.SORO</p>", unsafe_allow_html=True)
+       
