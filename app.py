@@ -188,22 +188,4 @@ if ver_por_categorias:
     categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
     if categoria_seleccionada:
         productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada)]
-        num_paginas = (len(productos_categoria) // 10) + 1
-        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        # Aquí podés implementar la función para mostrar la lista de productos
-        for i, producto in productos_categoria.iterrows():
-            st.write(f"{producto['Nombre']} - {producto['Codigo']}")
-
-# Ordenar por novedad
-if ordenar_por_novedad:
-    if 'Fecha Creado' in df.columns:
-        df_ordenado = df.sort_values('Fecha Creado', ascending=False)
-        num_paginas = (len(df_ordenado) // 10) + 1
-        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        # Aquí podés implementar la función para mostrar la lista de productos por novedad
-        for i, producto in df_ordenado.iterrows():
-            st.write(f"{producto['Nombre']} - {producto['Codigo']}")
-
-# Footer
-st.markdown("<hr>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 12px;'>Powered by VASCO.SORO</p>", unsafe_allow_html=True)
+        # Mostrar los productos filtrados por
