@@ -70,7 +70,7 @@ def obtener_color_stock(stock):
 # Mostrar producto en formato completo (con imagen)
 def mostrar_producto_completo(producto):
     st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
-    precio_formateado = f"{producto['Precio']:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
+    precio_formateado = f"{producto['Precio Jugueterias face']:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
     st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${precio_formateado} | Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
 
     imagen_url = producto.get('imagen', '')
