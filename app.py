@@ -148,6 +148,33 @@ if mostrar_seccion_superior:
         st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
     with col2:
+        # ===== NUEVO: Sección para subir archivo con contraseña =====
+        st.markdown("<hr>", unsafe_allow_html=True)  # Línea separadora para mayor claridad
+        st.markdown("### 🔒 Subir Nuevo Archivo Excel")  # Título de la sección de subida
+
+        # Campo para ingresar la contraseña
+        password = st.text_input("Ingrese la contraseña para subir el archivo:", type="password")
+
+        if password:
+            if password == "pasteur100pre":
+                st.success("Contraseña correcta. Puedes subir el archivo.")
+                uploaded_file = st.file_uploader("Selecciona un archivo Excel", type=["xlsx"])
+                if uploaded_file is not None:
+                    try:
+                        # Guardar el archivo subido como '1804.xlsx'
+                        with open("1804.xlsx", "wb") as f:
+                            f.write(uploaded_file.getbuffer())
+                        st.success("Archivo Excel subido y guardado correctamente.")
+                        st.cache_data.clear()  # Limpiar la caché para cargar los nuevos datos
+                        # Actualizar la fecha de última modificación
+                        fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
+                    except Exception as e:
+                        st.error(f"Error al subir el archivo: {e}")
+            else:
+                st.error("Contraseña incorrecta. Inténtalo de nuevo.")
+        # ===== FIN NUEVO =====
+
+        # Botón para actualizar datos
         if st.button('Actualizar datos'):
             st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
 
