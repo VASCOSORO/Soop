@@ -142,19 +142,26 @@ mostrar_seccion_superior = st.checkbox("Mostrar detalles de archivo y botón de 
 
 # Si el checkbox está activado, mostrar la sección superior
 if mostrar_seccion_superior:
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo {archivo}: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
-        st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
+    # ===== NUEVO: Sección para subir archivo con contraseña =====
+    st.markdown("<hr>", unsafe_allow_html=True)  # Línea separadora para mayor claridad
+    st.markdown(
+        """
+        <div style="display: flex; align-items: center;">
+            <span style="font-size: 24px; margin-right: 10px;">🔒</span>
+            <span style="font-size: 24px; font-weight: bold;">Subir Nuevo Archivo Excel</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    with col2:
-        # ===== NUEVO: Sección para subir archivo con contraseña =====
-        st.markdown("<hr>", unsafe_allow_html=True)  # Línea separadora para mayor claridad
-        st.markdown("### 🔒 Subir Nuevo Archivo Excel")  # Título de la sección de subida
+    # Crear una columna para alinear el campo de contraseña y el uploader
+    col_pass, col_space, col_upload = st.columns([1, 0.1, 2])
 
+    with col_pass:
         # Campo para ingresar la contraseña
         password = st.text_input("Ingrese la contraseña para subir el archivo:", type="password")
 
+    with col_upload:
         if password:
             if password == "pasteur100pre":
                 st.success("Contraseña correcta. Puedes subir el archivo.")
@@ -168,15 +175,26 @@ if mostrar_seccion_superior:
                         st.cache_data.clear()  # Limpiar la caché para cargar los nuevos datos
                         # Actualizar la fecha de última modificación
                         fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
+                        # Recargar los datos
+                        df = load_data()
                     except Exception as e:
                         st.error(f"Error al subir el archivo: {e}")
             else:
                 st.error("Contraseña incorrecta. Inténtalo de nuevo.")
-        # ===== FIN NUEVO =====
 
-        # Botón para actualizar datos
+    # Botón para actualizar datos
+    st.markdown("<hr>", unsafe_allow_html=True)  # Línea separadora para mayor claridad
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo {archivo}: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
+        st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
+    
+    with col2:
         if st.button('Actualizar datos'):
             st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
+            # Actualizar la fecha de última modificación
+            fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
+            st.success("Datos actualizados correctamente.")
 
 # Línea negra sobre el título y arriba de "Soop Buscador"
 st.markdown("<hr style='border:2px solid black'>", unsafe_allow_html=True)
@@ -254,7 +272,7 @@ if ver_por_categorias:
             categorias_individuales.add(categoria.strip())
     categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
     if categoria_seleccionada:
-        productos_categoria = df[df['Categorias'].apply(lambda x: categoria_seleccionada in str(x).split(','))]
+        productos_categoria = df[df['Categorias'].apply(lambda x: categoria_seleccionada in [c.strip() for c in str(x).split(',')])]
         num_paginas = (len(productos_categoria) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         mostrar_lista_productos(productos_categoria, pagina)
