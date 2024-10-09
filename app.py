@@ -49,6 +49,9 @@ def load_data():
     except FileNotFoundError:
         st.error("El archivo no se pudo encontrar. Por favor, asegúrese de que el archivo exista y vuelva a intentarlo.")
         return None
+    except PermissionError:
+        st.error("No se tienen permisos para acceder al archivo especificado. Verifique los permisos del archivo y vuelva a intentarlo.")
+        return None
     except Exception as e:
         st.error(f"Ocurrió un error al intentar cargar el archivo: {e}")
         return None
