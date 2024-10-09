@@ -85,6 +85,8 @@ if df is None:
             df = load_data()
         except FileNotFoundError:
             st.error("No se pudo guardar el archivo. Asegúrese de que el directorio sea válido.")
+        except PermissionError:
+            st.error("No se tienen permisos para guardar el archivo en la ubicación especificada.")
         except Exception as e:
             st.error(f"Error al subir el archivo: {e}")
 
