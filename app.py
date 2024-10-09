@@ -42,9 +42,16 @@ def load_data():
         st.error(f"El archivo '{file_path}' no se encuentra. Por favor, subí el archivo usando la opción de subida.")
         return None
 
-    # Cargar el archivo Excel
-    df = pd.read_excel(file_path, engine='openpyxl')
-    return df
+    try:
+        # Cargar el archivo Excel
+        df = pd.read_excel(file_path, engine='openpyxl')
+        return df
+    except FileNotFoundError:
+        st.error("El archivo no se pudo encontrar. Por favor, asegúrese de que el archivo exista y vuelva a intentarlo.")
+        return None
+    except Exception as e:
+        st.error(f"Ocurrió un error al intentar cargar el archivo: {e}")
+        return None
 
 # Función para cargar la imagen desde una URL con caché
 @st.cache_data
