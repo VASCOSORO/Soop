@@ -60,7 +60,8 @@ def cargar_imagen(url):
         response = requests.get(url)
         img = Image.open(BytesIO(response.content))
         return img
-    except:
+    except Exception as e:
+        st.error(f"Error al cargar la imagen: {e}")
         return None
 
 # Cargar datos
@@ -82,6 +83,8 @@ if df is None:
             st.cache_data.clear()  # Limpiar la caché para cargar los nuevos datos
             # Recargar los datos
             df = load_data()
+        except FileNotFoundError:
+            st.error("No se pudo guardar el archivo. Asegúrese de que el directorio sea válido.")
         except Exception as e:
             st.error(f"Error al subir el archivo: {e}")
 
