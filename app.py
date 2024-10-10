@@ -144,25 +144,28 @@ mostrar_seccion_superior = st.checkbox("Mostrar detalles de archivo y botón de 
 if mostrar_seccion_superior:
     # ===== NUEVO: Sección para subir archivo con contraseña =====
     st.markdown("<hr>", unsafe_allow_html=True)  # Línea separadora para mayor claridad
-    
-    # Checkbox para revelar la sección de subida secreta
-    mostrar_subida_secreta = st.checkbox("🔒 Secret Upload", key='mostrar_subida_secreta')
-    
-    if mostrar_subida_secreta:
-        # Crear dos columnas: una para el ícono y otra para la contraseña
-        col_candado, col_contraseña = st.columns([1, 3])
-        
-        with col_candado:
-            st.markdown("🔒")  # Ícono de candado
-        
-        with col_contraseña:
-            password = st.text_input("Ingrese la contraseña para subir el archivo:", type="password", key='password')
-        
-        # Verificar la contraseña
+    st.markdown(
+        """
+        <div style="display: flex; align-items: center;">
+            <span style="font-size: 24px; margin-right: 10px;">🔒</span>
+            <span style="font-size: 24px; font-weight: bold;">Subir Nuevo Archivo Excel</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Crear una columna para alinear el campo de contraseña y el uploader
+    col_pass, col_space, col_upload = st.columns([1, 0.1, 2])
+
+    with col_pass:
+        # Campo para ingresar la contraseña
+        password = st.text_input("Ingrese la contraseña para subir el archivo:", type="password")
+
+    with col_upload:
         if password:
             if password == "pasteur100pre":
                 st.success("Contraseña correcta. Puedes subir el archivo.")
-                uploaded_file = st.file_uploader("Selecciona un archivo Excel", type=["xlsx"], key='uploaded_file')
+                uploaded_file = st.file_uploader("Selecciona un archivo Excel", type=["xlsx"])
                 if uploaded_file is not None:
                     try:
                         # Guardar el archivo subido como '1804.xlsx'
@@ -178,11 +181,9 @@ if mostrar_seccion_superior:
                         st.error(f"Error al subir el archivo: {e}")
             else:
                 st.error("Contraseña incorrecta. Inténtalo de nuevo.")
-    
-    # Línea separadora entre la sección de subida y los detalles del archivo
-    st.markdown("<hr>", unsafe_allow_html=True)
-    
-    # Mostrar la fecha de última modificación y el botón de actualizar datos
+
+    # Botón para actualizar datos
+    st.markdown("<hr>", unsafe_allow_html=True)  # Línea separadora para mayor claridad
     col1, col2 = st.columns([3, 1])
     with col1:
         st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo {archivo}: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
