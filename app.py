@@ -32,11 +32,13 @@ repo = "Soop"  # El nombre de tu repositorio
 @st.cache_data
 def load_data(file_path):
     try:
+        if not os.path.isfile(file_path):
+            raise FileNotFoundError(f"El archivo '{file_path}' no se encuentra en el directorio.")
         df = pd.read_excel(file_path, engine='openpyxl')
         st.success(f"Archivo '{file_path}' cargado correctamente.")
         return df
-    except FileNotFoundError:
-        st.error(f"El archivo '{file_path}' no se encuentra en el directorio raíz. Por favor, sube el archivo usando la opción de subida.")
+    except FileNotFoundError as fnf_error:
+        st.error(str(fnf_error))
         return None
     except Exception as e:
         st.error(f"Error al cargar el archivo '{file_path}': {e}")
@@ -50,7 +52,7 @@ df = load_data(file_path)
 
 # Si el archivo no se encuentra, mostrar la opción para subir el archivo
 if df is None:
-    st.warning("Por favor, subí el archivo Excel.")
+    st.warning("Por favor, subí el archivo Excel si no está presente en el sistema.")
     uploaded_file = st.file_uploader("Selecciona un archivo Excel", type=["xlsx"])
 
     if uploaded_file is not None:
