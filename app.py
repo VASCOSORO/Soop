@@ -4,7 +4,8 @@ from PIL import Image
 import requests
 from io import BytesIO
 from datetime import datetime
-import pytz  # Para manejar zonas horarias
+import pytz
+import os
 
 # ====== Version 2.0.1 ==== Funcionando 
 # Definir la zona horaria de Argentina
@@ -17,7 +18,6 @@ def obtener_fecha_modificacion_github(usuario, repo, archivo):
     if response.status_code == 200:
         commit_data = response.json()[0]
         fecha_utc = commit_data['commit']['committer']['date']
-        # Convertir la fecha a datetime y luego ajustarla a la zona horaria de Argentina
         fecha_utc = datetime.strptime(fecha_utc, "%Y-%m-%dT%H:%M:%SZ")
         fecha_argentina = fecha_utc.astimezone(tz_argentina)
         return fecha_argentina.strftime("%Y-%m-%d %H:%M:%S")
@@ -27,26 +27,37 @@ def obtener_fecha_modificacion_github(usuario, repo, archivo):
 # Definir los detalles del repositorio
 usuario = "VASCOSORO"  # Tu usuario de GitHub
 repo = "Soop"  # El nombre de tu repositorio
-archivo = "1804.xlsx"  # El archivo del cual querés obtener la fecha
 
-# Obtener la fecha de la última modificación del archivo en GitHub
-fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
-
-# Cargar el archivo Excel
+# Intentar cargar el archivo Excel
 @st.cache_data
 def load_data():
-    df = pd.read_excel('1804.xlsx', engine='openpyxl')  # Cargar el archivo Excel 1804.xlsx
-    return df
+    # Nombres posibles para el archivo
+    posibles_archivos = ['1804.xlsx', '1804no.xlsx']
 
-# Función para cargar la imagen desde una URL con caché
-@st.cache_data
-def cargar_imagen(url):
-    try:
-        response = requests.get(url)
-        img = Image.open(BytesIO(response.content))
-        return img
-    except:
-        return None
+    # Buscar el archivo en la lista de posibles nombres
+    for file_name in posibles_archivos:
+        if os.path.isfile(file_name):
+            try:
+                df = pd.read_excel(file_name, engine='openpyxl')
+                st.success(f"Archivo '{file_name}' cargado correctamente.")
+                return df
+            except Exception as e:
+                st.error(f"Error al cargar el archivo '{file_name}': {e}")
+                return None
+
+    # Si ningún archivo es encontrado
+    st.error("Ninguno de los archivos esperados ('1804.xlsx' o '1804no.xlsx') se encuentra en el directorio raíz. Por favor, verifica que esté presente y accesible.")
+    return None
+
+# Cargar datos
+df = load_data()
+
+if df is not None:
+    st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
+else:
+    st.stop()  # Detener la ejecución si no se pueden cargar los datos
+
+# Aquí continuarías con el resto de tu código para mostrar productos, categorías, etc.
 
 # Función para cambiar el color del stock
 def obtener_color_stock(stock):
@@ -63,7 +74,6 @@ def obtener_color_stock(stock):
 def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
     st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
 
-    # Mostrar precio según el checkbox de precio por mayor
     if mostrar_mayorista:
         precio_mostrar = producto['Precio x Mayor']
         tipo_precio = "Precio x Mayor"
@@ -71,20 +81,17 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
         precio_mostrar = producto['Precio']
         tipo_precio = "Precio"
 
-    precio_formateado = f"{precio_mostrar:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
-    stock_color = obtener_color_stock(producto['Stock'])  # Cambiar el color del stock según el valor
+    precio_formateado = f"{precio_mostrar:,.0f}".replace(",", ".")
+    stock_color = obtener_color_stock(producto['Stock'])
     st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | {tipo_precio}: ${precio_formateado} | <span style='color: {stock_color};'>Stock: {producto['Stock']}</span></span>", unsafe_allow_html=True)
 
-    # Mostrar el precio con descuento si se aplica
     if mostrar_descuento and descuento > 0:
         precio_descuento = precio_mostrar * (1 - descuento / 100)
         st.markdown(f"<span style='font-size: 24px; color:blue;'>Precio con {descuento}% de descuento: ${precio_descuento:,.0f}</span>", unsafe_allow_html=True)
 
-    # Mostrar descripción y categorías
     st.markdown(f"<p style='font-size: 26px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
     st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
 
-    # Mostrar la imagen con botones "+" y "-" para ajustar el tamaño
     col_img, col_btns = st.columns([5, 1])
     with col_img:
         imagen_url = producto.get('imagen', '')
@@ -102,7 +109,6 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
         if st.button("➖"):
             st.session_state.img_size = max(st.session_state.get('img_size', 300) - 50, 100)
 
-    # Checkbox para mostrar ubicación
     if st.checkbox('Mostrar Ubicación'):
         st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}")
         st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
