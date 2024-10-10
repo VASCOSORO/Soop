@@ -7,7 +7,7 @@ from datetime import datetime
 import pytz
 import os
 
-# ====== Version 2.0.1 ==== Funcionando 
+# ====== Version 2.0.1 ==== Funcionando =====
 # Definir la zona horaria de Argentina
 tz_argentina = pytz.timezone('America/Argentina/Buenos_Aires')
 
@@ -27,8 +27,9 @@ def obtener_fecha_modificacion_github(usuario, repo, archivo):
 # Definir los detalles del repositorio
 usuario = "VASCOSORO"  # Tu usuario de GitHub
 repo = "Soop"  # El nombre de tu repositorio
+archivo = "1804.xlsx"  # El archivo del cual querés obtener la fecha
 
-# Función para cargar datos con opción de subida de archivo si no se encuentra
+# Cargar el archivo Excel
 @st.cache_data
 def load_data(file_path):
     try:
@@ -44,7 +45,7 @@ def load_data(file_path):
         st.error(f"Error al cargar el archivo '{file_path}': {e}")
         return None
 
-# Especificar el nombre del archivo
+# Especificar la ruta del archivo
 file_path = '1804.xlsx'
 
 # Intentar cargar el archivo
@@ -52,7 +53,7 @@ df = load_data(file_path)
 
 # Si el archivo no se encuentra, mostrar la opción para subir el archivo
 if df is None:
-    st.warning("Por favor, subí el archivo Excel si no está presente en el sistema.")
+    st.warning("El archivo Excel no se encuentra. Por favor, subí el archivo para continuar.")
     uploaded_file = st.file_uploader("Selecciona un archivo Excel", type=["xlsx"])
 
     if uploaded_file is not None:
@@ -60,6 +61,7 @@ if df is None:
         with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
         st.success("Archivo subido y guardado correctamente. Recargando datos...")
+
         # Intentar cargar el archivo nuevamente
         df = load_data(file_path)
 
@@ -80,6 +82,16 @@ def obtener_color_stock(stock):
         return 'orange'
     else:
         return 'black'
+
+# Función para cargar imágenes desde URL
+@st.cache_data
+def cargar_imagen(url):
+    try:
+        response = requests.get(url)
+        img = Image.open(BytesIO(response.content))
+        return img
+    except:
+        return None
 
 # Mostrar producto en formato completo (con imagen y control para cambiar tamaño)
 def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
