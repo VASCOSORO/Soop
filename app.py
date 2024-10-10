@@ -27,9 +27,8 @@ def obtener_fecha_modificacion_github(usuario, repo, archivo):
 # Definir los detalles del repositorio
 usuario = "VASCOSORO"  # Tu usuario de GitHub
 repo = "Soop"  # El nombre de tu repositorio
-archivo = "1804.xlsx"  # El archivo del cual querés obtener la fecha
 
-# Cargar el archivo Excel
+# Función para cargar datos con opción de subida de archivo si no se encuentra
 @st.cache_data
 def load_data(file_path):
     try:
@@ -45,23 +44,22 @@ def load_data(file_path):
         st.error(f"Error al cargar el archivo '{file_path}': {e}")
         return None
 
-# Especificar la ruta del archivo
-file_path = '1804.xlsx'
+# Especificar el nombre del archivo
+file_path = '1804no.xlsx'
 
 # Intentar cargar el archivo
 df = load_data(file_path)
 
 # Si el archivo no se encuentra, mostrar la opción para subir el archivo
 if df is None:
-    st.warning("El archivo Excel no se encuentra. Por favor, subí el archivo para continuar.")
+    st.warning("Por favor, subí el archivo Excel si no está presente en el sistema.")
     uploaded_file = st.file_uploader("Selecciona un archivo Excel", type=["xlsx"])
 
     if uploaded_file is not None:
-        # Guardar el archivo subido como '1804.xlsx' en el directorio actual
+        # Guardar el archivo subido como '1804no.xlsx' en el directorio actual
         with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
         st.success("Archivo subido y guardado correctamente. Recargando datos...")
-
         # Intentar cargar el archivo nuevamente
         df = load_data(file_path)
 
