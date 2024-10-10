@@ -28,36 +28,45 @@ def obtener_fecha_modificacion_github(usuario, repo, archivo):
 usuario = "VASCOSORO"  # Tu usuario de GitHub
 repo = "Soop"  # El nombre de tu repositorio
 
-# Intentar cargar el archivo Excel
+# Función para cargar datos con opción de subida de archivo si no se encuentra
 @st.cache_data
-def load_data():
-    # Nombres posibles para el archivo
-    posibles_archivos = ['1804.xlsx', '1804no.xlsx']
+def load_data(file_path):
+    try:
+        df = pd.read_excel(file_path, engine='openpyxl')
+        st.success(f"Archivo '{file_path}' cargado correctamente.")
+        return df
+    except FileNotFoundError:
+        st.error(f"El archivo '{file_path}' no se encuentra en el directorio raíz. Por favor, sube el archivo usando la opción de subida.")
+        return None
+    except Exception as e:
+        st.error(f"Error al cargar el archivo '{file_path}': {e}")
+        return None
 
-    # Buscar el archivo en la lista de posibles nombres
-    for file_name in posibles_archivos:
-        if os.path.isfile(file_name):
-            try:
-                df = pd.read_excel(file_name, engine='openpyxl')
-                st.success(f"Archivo '{file_name}' cargado correctamente.")
-                return df
-            except Exception as e:
-                st.error(f"Error al cargar el archivo '{file_name}': {e}")
-                return None
+# Especificar el nombre del archivo
+file_path = '1804.xlsx'
 
-    # Si ningún archivo es encontrado
-    st.error("Ninguno de los archivos esperados ('1804.xlsx' o '1804no.xlsx') se encuentra en el directorio raíz. Por favor, verifica que esté presente y accesible.")
-    return None
+# Intentar cargar el archivo
+df = load_data(file_path)
 
-# Cargar datos
-df = load_data()
+# Si el archivo no se encuentra, mostrar la opción para subir el archivo
+if df is None:
+    st.warning("Por favor, subí el archivo Excel.")
+    uploaded_file = st.file_uploader("Selecciona un archivo Excel", type=["xlsx"])
 
+    if uploaded_file is not None:
+        # Guardar el archivo subido como '1804.xlsx' en el directorio actual
+        with open(file_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        st.success("Archivo subido y guardado correctamente. Recargando datos...")
+        # Intentar cargar el archivo nuevamente
+        df = load_data(file_path)
+
+# Si los datos se cargan correctamente, continuar con el procesamiento
 if df is not None:
     st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
+    # Aquí continuas con el resto de tu código para mostrar productos, categorías, etc.
 else:
     st.stop()  # Detener la ejecución si no se pueden cargar los datos
-
-# Aquí continuarías con el resto de tu código para mostrar productos, categorías, etc.
 
 # Función para cambiar el color del stock
 def obtener_color_stock(stock):
