@@ -4,15 +4,17 @@ import pyautogui
 import os
 import shutil
 import speech_recognition as sr
-import pyttsx3
+from gtts import gTTS
+from playsound import playsound
+import tempfile
 from datetime import datetime
 
-# Configurar el motor de texto a voz
-engine = pyttsx3.init()
-
+# Función para hablar usando Google Text-to-Speech
 def hablar(texto):
-    engine.say(texto)
-    engine.runAndWait()
+    tts = gTTS(texto, lang="es")
+    with tempfile.NamedTemporaryFile(delete=True) as fp:
+        tts.save(f"{fp.name}.mp3")
+        playsound(f"{fp.name}.mp3")
 
 # Función para reconocer comandos de voz
 def reconocer_comando():
