@@ -14,28 +14,12 @@ def hablar(texto):
     engine.say(texto)
     engine.runAndWait()
 
-# Función para probar el micrófono
-def probar_microfono():
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        hablar("Por favor, decí algo para probar el micrófono.")
-        recognizer.adjust_for_ambient_noise(source)
-        audio = recognizer.listen(source)
-    
-    try:
-        texto = recognizer.recognize_google(audio, language="es-ES")
-        print(f"Has dicho: {texto}")
-        hablar(f"Has dicho: {texto}")
-    except sr.UnknownValueError:
-        hablar("No te he entendido.")
-    except sr.RequestError:
-        hablar("Error de conexión con el servicio de voz.")
-
 # Función para reconocer comandos de voz
 def reconocer_comando():
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        hablar("Escuchando...")
+        print("Escuchando...")  # Mostrar en la terminal
+        hablar("Escuchando...")  # Decir "Escuchando"
         recognizer.adjust_for_ambient_noise(source)
         audio = recognizer.listen(source)
     
@@ -122,9 +106,6 @@ def actualizar_productos():
     except Exception as e:
         hablar(f"Error al actualizar productos: {e}")
         print(f"Error: {e}")
-
-# Probar el micrófono
-probar_microfono()
 
 # Bucle principal
 while True:
