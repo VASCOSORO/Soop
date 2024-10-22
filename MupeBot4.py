@@ -8,6 +8,10 @@ from gtts import gTTS
 from playsound import playsound
 import tempfile
 from datetime import datetime
+from transformers import pipeline
+
+# Cargar el modelo GPT en español
+generador = pipeline('text-generation', model='datificate/gpt2-small-spanish')
 
 # Función para hablar usando Google Text-to-Speech
 def hablar(texto):
@@ -20,8 +24,8 @@ def hablar(texto):
 def reconocer_comando():
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        print("Escuchando...")  # Mostrar en la terminal
-        hablar("Escuchando...")  # Decir "Escuchando"
+        print("Escuchando...")
+        hablar("Escuchando...")
         recognizer.adjust_for_ambient_noise(source)
         audio = recognizer.listen(source)
     
@@ -30,7 +34,7 @@ def reconocer_comando():
         print(f"Has dicho: {comando}")
         return comando.lower()
     except sr.UnknownValueError:
-        hablar("No te he entendido, por favor, repetí el comando.")
+        hablar("No te he entendido, por favor, repite el comando.")
         return None
     except sr.RequestError:
         hablar("Error al conectar con el servicio de reconocimiento de voz.")
@@ -112,8 +116,15 @@ def actualizar_productos():
 # Bucle principal
 while True:
     comando = reconocer_comando()
-    if comando and "actualizar productos" in comando:
-        actualizar_productos()
-        break  # Termina el bucle después de la actualización
+    if comando:
+        if "actualizar productos" in comando:
+            actualizar_productos()
+            break  # Termina el bucle después de la actualización
+        else:
+            # Generar una respuesta con el modelo GPT
+            respuesta = generador(comando, max_length=50, num_return_sequences=1, do_sample=True)
+            texto_respuesta = respuesta[0]['generated_text']
+            print(f"Asistente: {texto_respuesta}")
+            hablar(texto_respuesta)
     else:
-        hablar("No te he entendido, por favor, repetí el comando.")
+        hablar("No te he entendido, por favor, repite el comando.")
