@@ -222,7 +222,7 @@ if mostrar_seccion_superior:
 st.markdown("<hr style='border:2px solid black'>", unsafe_allow_html=True)
 
 # Título
-st.markdown("<h1 style='text-align: center;'>🐻 Sooper 2.o beta 🧐 </h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>🐻Sooper 3.o🐻 beta  </h1>", unsafe_allow_html=True)
 
 # Inicializar variables en session_state para el buscador
 if 'selected_codigo' not in st.session_state:
