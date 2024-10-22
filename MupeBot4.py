@@ -99,6 +99,9 @@ def actualizar_productos():
         repositorio_path = r'C:\Users\virtu\Repositorios\Soop'
         shutil.move(new_path, os.path.join(repositorio_path, new_name))
 
+        # Hacer un git pull antes de agregar y hacer commit
+        subprocess.run(['git', '-C', repositorio_path, 'pull', 'origin', 'main'])
+
         # Hacer el commit y push al repositorio Soop
         subprocess.run(['git', '-C', repositorio_path, 'add', '.'])
         subprocess.run(['git', '-C', repositorio_path, 'commit', '-m', f'Subida de {new_name}'])

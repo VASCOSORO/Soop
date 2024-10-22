@@ -7,7 +7,6 @@ from datetime import datetime
 import pytz
 import os
 
-# ====== Version 2.0.1 ==== Funcionando =====
 # Definir la zona horaria de Argentina
 tz_argentina = pytz.timezone('America/Argentina/Buenos_Aires')
 
@@ -27,6 +26,10 @@ def obtener_fecha_modificacion_github(usuario, repo, archivo):
 # Definir los detalles del repositorio
 usuario = "VASCOSORO"  # Tu usuario de GitHub
 repo = "Soop"  # El nombre de tu repositorio
+archivo = '1804no.xlsx'
+
+# Intentar obtener la fecha de modificación
+fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
 
 # Función para cargar datos con opción de subida de archivo si no se encuentra
 @st.cache_data
@@ -42,6 +45,7 @@ def load_data(file_path):
         return None
     except Exception as e:
         st.error(f"Error al cargar el archivo '{file_path}': {e}")
+        st.exception(e)  # Mostrar el traceback completo en la app
         return None
 
 # Especificar el nombre del archivo
@@ -66,7 +70,6 @@ if df is None:
 # Si los datos se cargan correctamente, continuar con el procesamiento
 if df is not None:
     st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
-    # Aquí continuas con el resto de tu código para mostrar productos, categorías, etc.
 else:
     st.stop()  # Detener la ejecución si no se pueden cargar los datos
 
@@ -162,20 +165,19 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
         st.write("---")
 
 # Cargar datos
-df = load_data()
+df = load_data(file_path)
 
 # Checkbox para mostrar/ocultar la sección de la fecha, mensaje de filas y el botón de actualizar
 mostrar_seccion_superior = st.checkbox("Mostrar detalles de archivo y botón de actualización", value=True)
 
 # Si el checkbox está activado, mostrar la sección superior
 if mostrar_seccion_superior:
-    # ===== NUEVO: Sección para subir archivo con contraseña =====
     st.markdown("<hr>", unsafe_allow_html=True)  # Línea separadora para mayor claridad
     st.markdown(
-        """
+        f"""
         <div style="display: flex; align-items: center;">
             <span style="font-size: 24px; margin-right: 10px;">🔒</span>
-            <span style="font-size: 24px; font-weight: bold;">Subir Nuevo Archivo Excel</span>
+            <span style="font-size: 24px; font-weight: bold;'>Subir Nuevo Archivo Excel</span>
         </div>
         """,
         unsafe_allow_html=True
@@ -185,7 +187,6 @@ if mostrar_seccion_superior:
     col_pass, col_space, col_upload = st.columns([1, 0.1, 2])
 
     with col_pass:
-        # Campo para ingresar la contraseña
         password = st.text_input("Ingrese la contraseña para subir el archivo:", type="password")
 
     with col_upload:
@@ -195,19 +196,15 @@ if mostrar_seccion_superior:
                 uploaded_file = st.file_uploader("Selecciona un archivo Excel", type=["xlsx"])
                 if uploaded_file is not None:
                     try:
-                        # Guardar el archivo subido como '1804.xlsx'
-                        with open("1804.xlsx", "wb") as f:
+                        with open(file_path, "wb") as f:
                             f.write(uploaded_file.getbuffer())
                         st.success("Archivo Excel subido y guardado correctamente.")
                         st.cache_data.clear()  # Limpiar la caché para cargar los nuevos datos
-                        # Actualizar la fecha de última modificación
-                        fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
-                        # Recargar los datos
-                        df = load_data()
+                        df = load_data(file_path)
                     except Exception as e:
                         st.error(f"Error al subir el archivo: {e}")
             else:
-                st.error("Contraseña incorrecta. Inténtalo de nuevo.")
+                st.error("Contraseña incorrecta.")
 
     # Botón para actualizar datos
     st.markdown("<hr>", unsafe_allow_html=True)  # Línea separadora para mayor claridad
@@ -219,15 +216,13 @@ if mostrar_seccion_superior:
     with col2:
         if st.button('Actualizar datos'):
             st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
-            # Actualizar la fecha de última modificación
-            fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
             st.success("Datos actualizados correctamente.")
 
 # Línea negra sobre el título y arriba de "Soop Buscador"
 st.markdown("<hr style='border:2px solid black'>", unsafe_allow_html=True)
 
 # Título
-st.markdown("<h1 style='text-align: center;'>🐻 Sooper 2.o beta 🧐 </h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>🐻Sooper 3.o🐻 beta  </h1>", unsafe_allow_html=True)
 
 # Inicializar variables en session_state para el buscador
 if 'selected_codigo' not in st.session_state:
