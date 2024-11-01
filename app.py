@@ -56,15 +56,34 @@ df = load_data(file_path)
 
 # Si el archivo no se encuentra, mostrar la opción para subir el archivo
 if df is None:
-    st.warning("Por favor, subí el archivo Excel si no está presente en el sistema.")
-    uploaded_file = st.file_uploader("Selecciona un archivo Excel", type=["xlsx"])
+    st.warning("Por favor, subí el archivo Excel o CSV si no está presente en el sistema.")
+    uploaded_file = st.file_uploader("Selecciona un archivo Excel o CSV", type=["xlsx", "csv"])
 
     if uploaded_file is not None:
-        # Guardar el archivo subido como '1804no.xlsx' en el directorio actual
-        with open(file_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
+        file_extension = os.path.splitext(uploaded_file.name)[1]
+        
+        # Convertir CSV a Excel si es necesario
+        if file_extension == ".xlsx":
+            with open(file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+        elif file_extension == ".csv":
+            # Intentar leer el archivo CSV con manejo de errores
+            try:
+                csv_data = pd.read_csv(uploaded_file, encoding="utf-8", error_bad_lines=False, sep=None, engine="python")
+            except UnicodeDecodeError:
+                csv_data = pd.read_csv(uploaded_file, encoding="ISO-8859-1", error_bad_lines=False, sep=None, engine="python")
+            except pd.errors.ParserError:
+                st.error("Error al analizar el archivo CSV. Verifica el delimitador o la estructura del archivo.")
+                st.stop()
+
+            # Guardar el archivo en formato Excel
+            csv_data.to_excel(file_path, index=False, engine='openpyxl')
+            st.success("Archivo CSV convertido a Excel y guardado correctamente.")
+        else:
+            st.error("Formato no admitido. Sube un archivo en formato .xlsx o .csv")
+        
         st.success("Archivo subido y guardado correctamente. Recargando datos...")
-        # Intentar cargar el archivo nuevamente
+        st.cache_data.clear()  # Limpiar caché para cargar los nuevos datos
         df = load_data(file_path)
 
 # Si los datos se cargan correctamente, continuar con el procesamiento
@@ -193,12 +212,22 @@ if mostrar_seccion_superior:
         if password:
             if password == "pasteur100pre":
                 st.success("Contraseña correcta. Puedes subir el archivo.")
-                uploaded_file = st.file_uploader("Selecciona un archivo Excel", type=["xlsx"])
+                uploaded_file = st.file_uploader("Selecciona un archivo Excel o CSV", type=["xlsx", "csv"])
                 if uploaded_file is not None:
                     try:
-                        with open(file_path, "wb") as f:
-                            f.write(uploaded_file.getbuffer())
-                        st.success("Archivo Excel subido y guardado correctamente.")
+                        file_extension = os.path.splitext(uploaded_file.name)[1]
+                        if file_extension == ".xlsx":
+                            with open(file_path, "wb") as f:
+                                f.write(uploaded_file.getbuffer())
+                        elif file_extension == ".csv":
+                            try:
+                                csv_data = pd.read_csv(uploaded_file, encoding="utf-8", error_bad_lines=False, sep=None, engine="python")
+                            except UnicodeDecodeError:
+                                csv_data = pd.read_csv(uploaded_file, encoding="ISO-8859-1", error_bad_lines=False, sep=None, engine="python")
+                            csv_data.to_excel(file_path, index=False, engine='openpyxl')
+                            st.success("Archivo CSV convertido a Excel y guardado correctamente.")
+                        else:
+                            st.error("Formato no admitido. Sube un archivo en formato .xlsx o .csv")
                         st.cache_data.clear()  # Limpiar la caché para cargar los nuevos datos
                         df = load_data(file_path)
                     except Exception as e:
