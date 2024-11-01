@@ -24,14 +24,14 @@ def obtener_fecha_modificacion_github(usuario, repo, archivo):
         return "No se pudo obtener la fecha de actualización"
 
 # Definir los detalles del repositorio
-usuario = "VASCOSORO"
-repo = "Soop"
+usuario = "VASCOSORO"  # Tu usuario de GitHub
+repo = "Soop"  # El nombre de tu repositorio
 archivo = '1804no.xlsx'
 
 # Intentar obtener la fecha de modificación
 fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
 
-# Función para cargar datos con validación de columnas
+# Función para cargar datos con opción de subida de archivo si no se encuentra
 @st.cache_data
 def load_data(file_path):
     try:
@@ -39,7 +39,7 @@ def load_data(file_path):
             raise FileNotFoundError(f"El archivo '{file_path}' no se encuentra en el directorio.")
         df = pd.read_excel(file_path, engine='openpyxl')
         
-        # Validar columnas requeridas
+        # Validar columnas esperadas
         columnas_requeridas = ["Codigo", "Nombre", "Precio Jugueterias face", "Precio x Mayor", "Stock", "Descripcion", "Categorias", "imagen", "Pasillo", "Estante", "Proveedor"]
         if not all(col in df.columns for col in columnas_requeridas):
             raise ValueError("El archivo no tiene las columnas necesarias.")
@@ -51,6 +51,7 @@ def load_data(file_path):
         return None
     except Exception as e:
         st.error(f"Error al cargar el archivo '{file_path}': {e}")
+        st.exception(e)  # Mostrar el traceback completo en la app
         return None
 
 # Especificar el nombre del archivo
@@ -59,7 +60,7 @@ file_path = '1804no.xlsx'
 # Intentar cargar el archivo
 df = load_data(file_path)
 
-# Opción para subir archivo si no se encuentra
+# Si el archivo no se encuentra, mostrar la opción para subir el archivo
 if df is None:
     st.warning("Por favor, subí el archivo Excel o CSV si no está presente en el sistema.")
     uploaded_file = st.file_uploader("Selecciona un archivo Excel o CSV", type=["xlsx", "csv"])
@@ -72,23 +73,30 @@ if df is None:
             with open(file_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
         elif file_extension == ".csv":
+            # Intentar leer el archivo CSV con manejo de errores
             try:
                 csv_data = pd.read_csv(uploaded_file, encoding="utf-8", error_bad_lines=False, sep=None, engine="python")
             except UnicodeDecodeError:
                 csv_data = pd.read_csv(uploaded_file, encoding="ISO-8859-1", error_bad_lines=False, sep=None, engine="python")
+            except pd.errors.ParserError:
+                st.error("Error al analizar el archivo CSV. Verifica el delimitador o la estructura del archivo.")
+                st.stop()
+
+            # Guardar el archivo en formato Excel
             csv_data.to_excel(file_path, index=False, engine='openpyxl')
             st.success("Archivo CSV convertido a Excel y guardado correctamente.")
         else:
             st.error("Formato no admitido. Sube un archivo en formato .xlsx o .csv")
         
+        st.success("Archivo subido y guardado correctamente. Recargando datos...")
         st.cache_data.clear()  # Limpiar caché para cargar los nuevos datos
         df = load_data(file_path)
 
-# Si los datos se cargan correctamente, continuar
+# Si los datos se cargan correctamente, continuar con el procesamiento
 if df is not None:
     st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 else:
-    st.stop()
+    st.stop()  # Detener la ejecución si no se pueden cargar los datos
 
 # Función para cambiar el color del stock
 def obtener_color_stock(stock):
@@ -111,11 +119,11 @@ def cargar_imagen(url):
     except:
         return None
 
-# Mostrar producto en formato completo con control de precio normal y por mayor
+# Mostrar producto en formato completo (con imagen y control para cambiar tamaño)
 def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
     st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
 
-    # Precio normal (Jugueterias face) y precio por mayor basado en el checkbox
+    # Definir precio normal y precio por mayor basado en el checkbox
     precio_mostrar = producto['Precio Jugueterias face'] if not mostrar_mayorista else producto['Precio x Mayor']
     tipo_precio = "Precio Jugueterias face" if not mostrar_mayorista else "Precio x Mayor"
 
@@ -152,16 +160,13 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
         st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
         st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
 
-# Título
-st.markdown("<h1 style='text-align: center;'>🐻Sooper 3.o🐻 beta  </h1>", unsafe_allow_html=True)
-
 # Inicializar buscadores en session_state
 if 'selected_codigo' not in st.session_state:
     st.session_state.selected_codigo = ''
 if 'selected_nombre' not in st.session_state:
     st.session_state.selected_nombre = ''
 
-# Sincronizar código y nombre
+# Funciones de devolución de llamada para sincronizar código y nombre
 def on_codigo_change():
     codigo = st.session_state.selected_codigo
     if codigo:
@@ -178,7 +183,7 @@ def on_nombre_change():
     else:
         st.session_state.selected_codigo = ''
 
-# Buscadores de código y nombre
+# Crear 2 columnas para el buscador por código y el buscador por nombre
 col_codigo, col_nombre = st.columns([1, 2])
 
 with col_codigo:
@@ -189,19 +194,22 @@ with col_nombre:
     nombre_lista = [""] + df['Nombre'].unique().tolist()
     st.selectbox("Buscar por Nombre", nombre_lista, key='selected_nombre', on_change=on_nombre_change)
 
-# Mostrar producto seleccionado
+# Si se selecciona un código y un nombre, mostrar el producto
 if st.session_state.selected_codigo and st.session_state.selected_nombre:
     producto_data = df[df['Codigo'] == st.session_state.selected_codigo].iloc[0]
 
-    # Checkbox para precio mayorista y calculador de descuento
+    # Agregar el checkbox para mostrar precio por mayor y calculador de descuento
     col1, col2 = st.columns([1, 2])
     with col1:
         mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor")
     with col2:
         mostrar_descuento = st.checkbox("Mostrar calculador de descuento")
-    descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1, value=0) if mostrar_descuento else 0
+    if mostrar_descuento:
+        descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1, value=0)
+    else:
+        descuento = 0
 
-    # Mostrar el producto con las opciones
+    # Mostrar el producto con las opciones de precio por mayor y descuento
     mostrar_producto_completo(producto_data, mostrar_mayorista=mostrar_mayorista, mostrar_descuento=mostrar_descuento, descuento=descuento)
 
 # Footer
