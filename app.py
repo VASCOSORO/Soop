@@ -38,7 +38,16 @@ def load_data(file_path):
         if not os.path.isfile(file_path):
             raise FileNotFoundError(f"El archivo '{file_path}' no se encuentra en el directorio.")
         df = pd.read_excel(file_path, engine='openpyxl')
+
+        # Renombrar la columna "Precio" a "Precio x Mayor"
+        if "Precio" in df.columns:
+            df = df.rename(columns={"Precio": "Precio x Mayor"})
+
         st.success(f"Archivo '{file_path}' cargado correctamente.")
+        
+        # Mostrar los nombres de las columnas para verificar
+        st.write("Columnas en el archivo cargado:", df.columns.tolist())
+        
         return df
     except FileNotFoundError as fnf_error:
         st.error(str(fnf_error))
@@ -54,42 +63,13 @@ file_path = '1804no.xlsx'
 # Intentar cargar el archivo
 df = load_data(file_path)
 
-# Si el archivo no se encuentra, mostrar la opción para subir el archivo
-if df is None:
-    st.warning("Por favor, subí el archivo Excel o CSV si no está presente en el sistema.")
-    uploaded_file = st.file_uploader("Selecciona un archivo Excel o CSV", type=["xlsx", "csv"])
-
-    if uploaded_file is not None:
-        file_extension = os.path.splitext(uploaded_file.name)[1]
-        
-        # Convertir CSV a Excel si es necesario
-        if file_extension == ".xlsx":
-            with open(file_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-        elif file_extension == ".csv":
-            try:
-                csv_data = pd.read_csv(uploaded_file, encoding="utf-8", error_bad_lines=False, sep=None, engine="python")
-            except UnicodeDecodeError:
-                csv_data = pd.read_csv(uploaded_file, encoding="ISO-8859-1", error_bad_lines=False, sep=None, engine="python")
-            except pd.errors.ParserError:
-                st.error("Error al analizar el archivo CSV. Verifica el delimitador o la estructura del archivo.")
-                st.stop()
-
-            # Guardar el archivo en formato Excel
-            csv_data.to_excel(file_path, index=False, engine='openpyxl')
-            st.success("Archivo CSV convertido a Excel y guardado correctamente.")
-        else:
-            st.error("Formato no admitido. Sube un archivo en formato .xlsx o .csv")
-        
-        st.success("Archivo subido y guardado correctamente. Recargando datos...")
-        st.cache_data.clear()
-        df = load_data(file_path)
-
-# Si los datos se cargan correctamente, continuar con el procesamiento
+# Verificación adicional para asegurarse de que las columnas existan
 if df is not None:
-    st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
-else:
-    st.stop()
+    columnas_requeridas = ["Precio Jugueterias face", "Precio x Mayor"]
+    for columna in columnas_requeridas:
+        if columna not in df.columns:
+            st.error(f"La columna '{columna}' no se encuentra en el archivo cargado.")
+            st.stop()  # Detener si falta alguna columna importante
 
 # Función para cambiar el color del stock
 def obtener_color_stock(stock):
@@ -118,11 +98,16 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
 
     # Mostrar precio normal o precio por mayor basado en el checkbox
     if mostrar_mayorista:
-        precio_mostrar = producto['Precio x Mayor']
+        precio_mostrar = producto.get('Precio x Mayor', None)
         tipo_precio = "Precio x Mayor"
     else:
-        precio_mostrar = producto['Precio Jugueterias face']
+        precio_mostrar = producto.get('Precio Jugueterias face', None)
         tipo_precio = "Precio"
+
+    # Verificación para manejar precios faltantes
+    if precio_mostrar is None:
+        st.error(f"El precio '{tipo_precio}' no está disponible para este producto.")
+        return
 
     precio_formateado = f"{precio_mostrar:,.0f}".replace(",", ".")
     stock_color = obtener_color_stock(producto['Stock'])
@@ -177,7 +162,7 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
         with col2:
             st.write(f"### {producto['Nombre']}")
             stock_color = obtener_color_stock(producto['Stock'])
-            precio_formateado = f"{producto['Precio Jugueterias face']:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
+            precio_formateado = f"{producto['Precio Jugueterias face']:,.0f}".replace(",", ".")
             st.markdown(f"Código: {producto['Codigo']} | Precio: ${precio_formateado} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)
             st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
             st.write(f"Categorías: {producto['Categorias']}")
@@ -338,4 +323,4 @@ if ordenar_por_novedad:
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 12px;'>Powered by VASCO.SORO</p>", unsafe_allow_html=True) 
+st.markdown("<p style='text-align: center; font-size: 12px;'>Powered by VASCO.SORO</p>", unsafe_allow_html=True)
