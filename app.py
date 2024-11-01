@@ -67,7 +67,10 @@ if df is None:
             with open(file_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
         elif file_extension == ".csv":
-            csv_data = pd.read_csv(uploaded_file)
+            try:
+                csv_data = pd.read_csv(uploaded_file, encoding="utf-8")
+            except UnicodeDecodeError:
+                csv_data = pd.read_csv(uploaded_file, encoding="ISO-8859-1")
             csv_data.to_excel(file_path, index=False, engine='openpyxl')
             st.success("Archivo CSV convertido a Excel y guardado correctamente.")
         else:
@@ -211,7 +214,10 @@ if mostrar_seccion_superior:
                             with open(file_path, "wb") as f:
                                 f.write(uploaded_file.getbuffer())
                         elif file_extension == ".csv":
-                            csv_data = pd.read_csv(uploaded_file)
+                            try:
+                                csv_data = pd.read_csv(uploaded_file, encoding="utf-8")
+                            except UnicodeDecodeError:
+                                csv_data = pd.read_csv(uploaded_file, encoding="ISO-8859-1")
                             csv_data.to_excel(file_path, index=False, engine='openpyxl')
                             st.success("Archivo CSV convertido a Excel y guardado correctamente.")
                         else:
