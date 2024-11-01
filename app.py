@@ -24,8 +24,8 @@ def obtener_fecha_modificacion_github(usuario, repo, archivo):
         return "No se pudo obtener la fecha de actualización"
 
 # Definir los detalles del repositorio
-usuario = "VASCOSORO"  # Tu usuario de GitHub
-repo = "Soop"  # El nombre de tu repositorio
+usuario = "VASCOSORO"
+repo = "Soop"
 archivo = '1804no.xlsx'
 
 # Intentar obtener la fecha de modificación
@@ -45,7 +45,7 @@ def load_data(file_path):
         return None
     except Exception as e:
         st.error(f"Error al cargar el archivo '{file_path}': {e}")
-        st.exception(e)  # Mostrar el traceback completo en la app
+        st.exception(e)
         return None
 
 # Especificar el nombre del archivo
@@ -67,7 +67,6 @@ if df is None:
             with open(file_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
         elif file_extension == ".csv":
-            # Intentar leer el archivo CSV con manejo de errores
             try:
                 csv_data = pd.read_csv(uploaded_file, encoding="utf-8", error_bad_lines=False, sep=None, engine="python")
             except UnicodeDecodeError:
@@ -83,14 +82,14 @@ if df is None:
             st.error("Formato no admitido. Sube un archivo en formato .xlsx o .csv")
         
         st.success("Archivo subido y guardado correctamente. Recargando datos...")
-        st.cache_data.clear()  # Limpiar caché para cargar los nuevos datos
+        st.cache_data.clear()
         df = load_data(file_path)
 
 # Si los datos se cargan correctamente, continuar con el procesamiento
 if df is not None:
     st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 else:
-    st.stop()  # Detener la ejecución si no se pueden cargar los datos
+    st.stop()
 
 # Función para cambiar el color del stock
 def obtener_color_stock(stock):
@@ -117,11 +116,12 @@ def cargar_imagen(url):
 def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
     st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
 
+    # Mostrar precio normal o precio por mayor basado en el checkbox
     if mostrar_mayorista:
         precio_mostrar = producto['Precio x Mayor']
         tipo_precio = "Precio x Mayor"
     else:
-        precio_mostrar = producto['Precio']
+        precio_mostrar = producto['Precio Jugueterias face']
         tipo_precio = "Precio"
 
     precio_formateado = f"{precio_mostrar:,.0f}".replace(",", ".")
@@ -170,14 +170,14 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
             if imagen_url:
                 imagen = cargar_imagen(imagen_url)
                 if imagen:
-                    st.image(imagen, width=150)  # Tamaño fijo para las imágenes en lista
+                    st.image(imagen, width=150)
                 else:
                     st.write("Imagen no disponible.")
 
         with col2:
             st.write(f"### {producto['Nombre']}")
             stock_color = obtener_color_stock(producto['Stock'])
-            precio_formateado = f"{producto['Precio']:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
+            precio_formateado = f"{producto['Precio Jugueterias face']:,.0f}".replace(",", ".")  # Formatear el precio sin decimales
             st.markdown(f"Código: {producto['Codigo']} | Precio: ${precio_formateado} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)
             st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
             st.write(f"Categorías: {producto['Categorias']}")
@@ -191,7 +191,7 @@ mostrar_seccion_superior = st.checkbox("Mostrar detalles de archivo y botón de 
 
 # Si el checkbox está activado, mostrar la sección superior
 if mostrar_seccion_superior:
-    st.markdown("<hr>", unsafe_allow_html=True)  # Línea separadora para mayor claridad
+    st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown(
         f"""
         <div style="display: flex; align-items: center;">
@@ -228,7 +228,7 @@ if mostrar_seccion_superior:
                             st.success("Archivo CSV convertido a Excel y guardado correctamente.")
                         else:
                             st.error("Formato no admitido. Sube un archivo en formato .xlsx o .csv")
-                        st.cache_data.clear()  # Limpiar la caché para cargar los nuevos datos
+                        st.cache_data.clear()
                         df = load_data(file_path)
                     except Exception as e:
                         st.error(f"Error al subir el archivo: {e}")
@@ -236,7 +236,7 @@ if mostrar_seccion_superior:
                 st.error("Contraseña incorrecta.")
 
     # Botón para actualizar datos
-    st.markdown("<hr>", unsafe_allow_html=True)  # Línea separadora para mayor claridad
+    st.markdown("<hr>", unsafe_allow_html=True)
     col1, col2 = st.columns([3, 1])
     with col1:
         st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo {archivo}: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
@@ -244,7 +244,7 @@ if mostrar_seccion_superior:
     
     with col2:
         if st.button('Actualizar datos'):
-            st.cache_data.clear()  # Limpiar la caché para asegurarse de cargar los datos actualizados
+            st.cache_data.clear()
             st.success("Datos actualizados correctamente.")
 
 # Línea negra sobre el título y arriba de "Soop Buscador"
