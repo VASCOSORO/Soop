@@ -67,10 +67,16 @@ if df is None:
             with open(file_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
         elif file_extension == ".csv":
+            # Intentar leer el archivo CSV con manejo de errores
             try:
-                csv_data = pd.read_csv(uploaded_file, encoding="utf-8")
+                csv_data = pd.read_csv(uploaded_file, encoding="utf-8", error_bad_lines=False, sep=None, engine="python")
             except UnicodeDecodeError:
-                csv_data = pd.read_csv(uploaded_file, encoding="ISO-8859-1")
+                csv_data = pd.read_csv(uploaded_file, encoding="ISO-8859-1", error_bad_lines=False, sep=None, engine="python")
+            except pd.errors.ParserError:
+                st.error("Error al analizar el archivo CSV. Verifica el delimitador o la estructura del archivo.")
+                st.stop()
+
+            # Guardar el archivo en formato Excel
             csv_data.to_excel(file_path, index=False, engine='openpyxl')
             st.success("Archivo CSV convertido a Excel y guardado correctamente.")
         else:
@@ -215,9 +221,9 @@ if mostrar_seccion_superior:
                                 f.write(uploaded_file.getbuffer())
                         elif file_extension == ".csv":
                             try:
-                                csv_data = pd.read_csv(uploaded_file, encoding="utf-8")
+                                csv_data = pd.read_csv(uploaded_file, encoding="utf-8", error_bad_lines=False, sep=None, engine="python")
                             except UnicodeDecodeError:
-                                csv_data = pd.read_csv(uploaded_file, encoding="ISO-8859-1")
+                                csv_data = pd.read_csv(uploaded_file, encoding="ISO-8859-1", error_bad_lines=False, sep=None, engine="python")
                             csv_data.to_excel(file_path, index=False, engine='openpyxl')
                             st.success("Archivo CSV convertido a Excel y guardado correctamente.")
                         else:
