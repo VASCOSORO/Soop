@@ -9,6 +9,7 @@ from playsound import playsound
 import tempfile
 from datetime import datetime
 from transformers import pipeline
+from tkinter import Tk, filedialog
 
 # Cargar el modelo GPT en español
 generador = pipeline('text-generation', model='datificate/gpt2-small-spanish')
@@ -40,8 +41,8 @@ def reconocer_comando():
         hablar("Error al conectar con el servicio de reconocimiento de voz.")
         return None
 
-# Función para actualizar productos
-def actualizar_productos():
+# Función para actualizar productos con CSV especificado
+def actualizar_productos(csv_path=None):
     hablar("Actualizando productos, por favor espera.")
     
     # Ruta al ejecutable de Edge y los argumentos para iniciar la aplicación
@@ -56,8 +57,6 @@ def actualizar_productos():
 
     # Ejecutar el comando para abrir Edge en modo aplicación
     subprocess.Popen([command] + args)
-
-    # Esperar unos segundos para que la aplicación se abra correctamente
     time.sleep(5)
 
     # Simular teclas y clicks
@@ -82,27 +81,24 @@ def actualizar_productos():
         pyautogui.click(x=3115, y=308)
         time.sleep(10)
 
-        # Detectar el archivo CSV más reciente
-        download_folder = r'C:\Users\virtu\Downloads'
-        files = os.listdir(download_folder)
-        paths = [os.path.join(download_folder, file) for file in files]
-        recent_file = max(paths, key=os.path.getctime)
-        print(f"Archivo más reciente encontrado: {recent_file}")
+        if not csv_path:
+            # Detectar el archivo CSV más reciente en la carpeta de descargas
+            download_folder = r'C:\Users\virtu\Downloads'
+            files = os.listdir(download_folder)
+            paths = [os.path.join(download_folder, file) for file in files]
+            recent_file = max(paths, key=os.path.getctime)
+            print(f"Archivo más reciente encontrado: {recent_file}")
+            csv_path = recent_file
 
-        # Renombrar el archivo CSV
+        # Renombrar y mover el archivo CSV
         new_name = 'tmp_28_1728896035.csv'
-        new_path = os.path.join(download_folder, new_name)
-        shutil.move(recent_file, new_path)
-        print(f"Archivo renombrado a: {new_path}")
+        new_path = os.path.join(r'C:\Users\virtu\Repositorios\Soop', new_name)
+        shutil.move(csv_path, new_path)
+        print(f"Archivo CSV movido a {new_path}")
 
-        # Mover el archivo renombrado al repositorio Soop
+        # Git pull, commit y push al repositorio Soop
         repositorio_path = r'C:\Users\virtu\Repositorios\Soop'
-        shutil.move(new_path, os.path.join(repositorio_path, new_name))
-
-        # Hacer un git pull antes de agregar y hacer commit
         subprocess.run(['git', '-C', repositorio_path, 'pull', 'origin', 'main'])
-
-        # Hacer el commit y push al repositorio Soop
         subprocess.run(['git', '-C', repositorio_path, 'add', '.'])
         subprocess.run(['git', '-C', repositorio_path, 'commit', '-m', f'Subida de {new_name}'])
         subprocess.run(['git', '-C', repositorio_path, 'push', 'origin', 'main'])
@@ -116,6 +112,16 @@ def actualizar_productos():
         hablar(f"Error al actualizar productos: {e}")
         print(f"Error: {e}")
 
+# Función para seleccionar un archivo CSV
+def seleccionar_csv():
+    Tk().withdraw()  # Ocultar la ventana principal
+    csv_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+    if csv_path:
+        hablar("Archivo seleccionado, procediendo a actualizar.")
+        actualizar_productos(csv_path)
+    else:
+        hablar("No se seleccionó ningún archivo.")
+
 # Bucle principal
 while True:
     comando = reconocer_comando()
@@ -123,6 +129,9 @@ while True:
         if "actualizar productos" in comando:
             actualizar_productos()
             break  # Termina el bucle después de la actualización
+        elif "subir archivo" in comando:
+            seleccionar_csv()
+            break
         else:
             # Generar una respuesta con el modelo GPT
             respuesta = generador(comando, max_length=50, num_return_sequences=1, do_sample=True)
