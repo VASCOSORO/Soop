@@ -53,13 +53,16 @@ file_path = '1804no.xlsx'
 # Intentar cargar el archivo
 df = load_data(file_path)
 
+# Mostrar todas las columnas para verificar nombres
+if df is not None:
+    st.write("Columnas disponibles en el archivo cargado:", df.columns.tolist())
+
 # Verificación de columnas requeridas
 if df is not None:
     columnas_requeridas = ["Precio", "Precio x Mayor", "Stock", "StockSuc2"]
-    for columna in columnas_requeridas:
-        if columna not in df.columns:
-            st.error(f"La columna '{columna}' no se encuentra en el archivo cargado.")
-            st.stop()
+    columnas_faltantes = [col for col in columnas_requeridas if col not in df.columns]
+    if columnas_faltantes:
+        st.warning(f"Las siguientes columnas no se encuentran en el archivo cargado: {', '.join(columnas_faltantes)}. Verifica los nombres de las columnas en el archivo.")
 
 # Checkbox para mostrar/ocultar la sección de detalles de archivo y actualización
 mostrar_seccion_superior = st.checkbox("Mostrar detalles de archivo y botón de actualización", value=False)
@@ -185,7 +188,8 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
     else:
         precio_descuento = precio
 
-    st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${precio_descuento:,.2f} | Disponible en Suc 2: {'Sin stock' if producto['StockSuc2'] == 0 else int(producto['StockSuc2'])}</span>", unsafe_allow_html=True)
+    stock_suc2 = producto.get('StockSuc2', 0)
+    st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${precio_descuento:,.2f} | Disponible en Suc 2: {'Sin stock' if stock_suc2 == 0 else int(stock_suc2)}</span>", unsafe_allow_html=True)
     
     stock_color = obtener_color_stock(producto['Stock'])
     st.markdown(f"<span style='font-size: 24px; color: {stock_color};'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
@@ -234,7 +238,7 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
         st.write(f"**Precio x Mayor:** ${producto['Precio x Mayor']:,.2f}")
         
         # Stock y Disponibilidad en Sucursal 2
-        stock_disponible_suc2 = "Sin stock" if producto['StockSuc2'] == 0 else int(producto['StockSuc2'])
+        stock_disponible_suc2 = "Sin stock" if producto.get('StockSuc2', 0) == 0 else int(producto['StockSuc2'])
         st.write(f"**Disponible en Suc 2:** {stock_disponible_suc2}")
         
         # Otros detalles
