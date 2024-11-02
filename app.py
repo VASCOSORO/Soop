@@ -182,8 +182,36 @@ if st.session_state.selected_codigo and st.session_state.selected_nombre:
     else:
         descuento = 0
 
-    # Mostrar el producto con las opciones de precio por mayor y descuento
-    # función de mostrar_producto_completo para mostrar los datos del producto
+# Sección para ver lista por categorías o por novedades
+col_opciones = st.columns(3)
+with col_opciones[0]:
+    ver_por_categorias = st.checkbox("Ver lista por Categorías")
+with col_opciones[1]:
+    ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
+with col_opciones[2]:
+    st.checkbox("Sugerir por Rubro (Próximamente)")
+
+# Ver lista por categorías
+if ver_por_categorias:
+    todas_las_categorias = df['Categorias'].dropna().unique()
+    categorias_individuales = set()
+    for categorias in todas_las_categorias:
+        for categoria in categorias.split(','):
+            categorias_individuales.add(categoria.strip())
+    categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
+    if categoria_seleccionada:
+        productos_categoria = df[df['Categorias'].apply(lambda x: categoria_seleccionada in [c.strip() for c in str(x).split(',')])]
+        num_paginas = (len(productos_categoria) // 10) + 1
+        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
+        # Mostrar productos en formato lista aquí
+
+# Ordenar por novedad
+if ordenar_por_novedad:
+    if 'Fecha Creado' in df.columns:
+        df_ordenado = df.sort_values('Fecha Creado', ascending=False)
+        num_paginas = (len(df_ordenado) // 10) + 1
+        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
+        # Mostrar productos en formato lista aquí
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
