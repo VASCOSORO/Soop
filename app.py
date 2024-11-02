@@ -176,22 +176,22 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
                 st.session_state.img_size = max(st.session_state.get('img_size', 300) - 50, 100)
 
     with col_datos:
-        st.markdown(f"<h2 style='font-size: 36px;'>{producto['Codigo']} | {producto['Nombre']} | ${producto['Precio']:,.2f}</h2>", unsafe_allow_html=True)
-        
+        # Mostrar precio según selección
         precio = producto['Precio x Mayor'] if mostrar_mayorista else producto['Precio']
+        st.markdown(f"<h2 style='font-size: 36px;'>{producto['Codigo']} | {producto['Nombre']} | ${precio:,.2f}</h2>", unsafe_allow_html=True)
+        
+        # Mostrar calculador de descuento si está activado
         if mostrar_descuento:
             precio_descuento = precio * (1 - descuento / 100)
             st.markdown(f"<span style='font-size: 24px; color:blue;'>Precio con {descuento}% de descuento: ${precio_descuento:,.2f}</span>", unsafe_allow_html=True)
-        else:
-            precio_descuento = precio
 
+        # Mostrar stock
         stock_color = obtener_color_stock(producto['Stock'])
         st.markdown(f"<span style='font-size: 24px; color: {stock_color};'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
 
-        stock_suc2 = producto.get('StockSuc2', 0)
-        stock_suc2_text = "NO" if stock_suc2 == 0 else int(stock_suc2)
-        stock_suc2_color = "red" if stock_suc2 == 0 else "black"
-        st.markdown(f"<span style='font-size: 24px; color: {stock_suc2_color};'>StockSuc2: {stock_suc2_text}</span>", unsafe_allow_html=True)
+        # Mostrar StockSuc2 solo si hay stock en esa sucursal y stock principal es bajo
+        if producto['StockSuc2'] > 0 and stock_color == 'red':
+            st.markdown(f"<span style='font-size: 24px; color: green;'>Disponible en Suc. 2: {producto['StockSuc2']}</span>", unsafe_allow_html=True)
 
         if st.checkbox('Mostrar Ubicación', value=False):
             st.write(f"**Pasillo**: {producto.get('Pasillo', 'Sin datos')}")
@@ -210,7 +210,7 @@ if st.session_state.selected_codigo and st.session_state.selected_nombre:
     mostrar_producto_completo(producto_data, mostrar_mayorista, mostrar_descuento, descuento)
 
 # Función para mostrar lista de productos con paginación
-def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
+def mostrar_lista_productos(df, mostrar_mayorista, pagina, productos_por_pagina=10):
     inicio = (pagina - 1) * productos_por_pagina
     fin = inicio + productos_por_pagina
     productos_pagina = df.iloc[inicio:fin]
@@ -223,12 +223,14 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
                 if imagen:
                     st.image(imagen, width=100)
         with col_datos:
-            st.markdown(f"<h4>{producto['Codigo']} | {producto['Nombre']} | ${producto['Precio']:,.2f}</h4>", unsafe_allow_html=True)
-            stock_disponible_suc2 = "Sin stock" if producto.get('StockSuc2', 0) == 0 else int(producto['StockSuc2'])
-            stock_suc2_color = "red" if producto.get('StockSuc2', 0) == 0 else "green"
-            st.markdown(f"<span style='color: {stock_suc2_color};'>**StockSuc2:** {stock_disponible_suc2}</span>", unsafe_allow_html=True)
+            # Cambiar el precio mostrado según la selección de "Mostrar Precio por Mayor"
+            precio = producto['Precio x Mayor'] if mostrar_mayorista else producto['Precio']
+            st.markdown(f"<h4>{producto['Codigo']} | {producto['Nombre']} | ${precio:,.2f}</h4>", unsafe_allow_html=True)
+
+            # Mostrar "Disponible en Suc. 2" solo si hay stock en sucursal 2 y el stock principal está en rojo
             stock_color = obtener_color_stock(producto['Stock'])
-            st.markdown(f"<span style='color: {stock_color};'>**Stock:** {producto['Stock']}</span>", unsafe_allow_html=True)
+            if producto['StockSuc2'] > 0 and stock_color == 'red':
+                st.markdown(f"<span style='color: green;'>Disponible en Suc. 2: {producto['StockSuc2']}</span>", unsafe_allow_html=True)
         st.write("---")
 
 # Filtros para mostrar productos por categoría o novedad
@@ -250,7 +252,7 @@ if filtro_codigo:
         if not productos_prefijo.empty:
             num_paginas = (len(productos_prefijo) - 1) // 10 + 1
             pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1, step=1)
-            mostrar_lista_productos(productos_prefijo, pagina)
+            mostrar_lista_productos(productos_prefijo, mostrar_mayorista, pagina)
         else:
             st.warning("No se encontraron productos con ese prefijo.")
 
@@ -261,7 +263,7 @@ if ver_por_categorias:
     productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada, na=False)]
     num_paginas = (len(productos_categoria) // 10) + 1
     pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-    mostrar_lista_productos(productos_categoria, pagina)
+    mostrar_lista_productos(productos_categoria, mostrar_mayorista, pagina)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
@@ -269,7 +271,7 @@ if ordenar_por_novedad:
         df_ordenado = df.sort_values('Fecha Creado', ascending=False)
         num_paginas = (len(df_ordenado) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(df_ordenado, pagina)
+        mostrar_lista_productos(df_ordenado, mostrar_mayorista, pagina)
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
