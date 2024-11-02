@@ -258,13 +258,34 @@ with col_nov:
 with col_cod:
     filtro_codigo = st.checkbox("Listado por Inicio de Código")
 
+# Función para mostrar lista de productos con paginación
+def mostrar_lista_productos(df, mostrar_mayorista, pagina, productos_por_pagina=10):
+    inicio = (pagina - 1) * productos_por_pagina
+    fin = inicio + productos_por_pagina
+    productos_pagina = df.iloc[inicio:fin]
+
+    for _, producto in productos_pagina.iterrows():
+        col_img, col_datos = st.columns([1, 3])
+        with col_img:
+            if producto.get("imagen"):
+                imagen = cargar_imagen(producto["imagen"])
+                if imagen:
+                    st.image(imagen, width=100)
+        with col_datos:
+            precio = producto['Precio x Mayor'] if mostrar_mayorista else producto['Precio']
+            st.markdown(f"<h4>{producto['Codigo']} | {producto['Nombre']} | ${precio:,.2f}</h4>", unsafe_allow_html=True)
+            stock_color = obtener_color_stock(producto['Stock'])
+            st.markdown(f"<span style='color: {stock_color};'>**Stock:** {producto['Stock']}</span>", unsafe_allow_html=True)
+            # Mostrar StockSuc2 si está disponible
+            if producto['StockSuc2'] > 0:
+                st.markdown(f"<span style='color: green;'>**Disponible en Suc. 2:** {producto['StockSuc2']}</span>", unsafe_allow_html=True)
+        st.write("---")
+
 # Filtro por Inicio de Código
 if filtro_codigo:
     prefijo_codigo = st.text_input("Ingresa el prefijo del código")
     if prefijo_codigo:
         productos_prefijo = df[df['Codigo'].str.startswith(prefijo_codigo, na=False)]
-        
-        # Verificar si hay productos con el prefijo ingresado
         if not productos_prefijo.empty:
             num_paginas = (len(productos_prefijo) - 1) // 10 + 1
             pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1, step=1)
