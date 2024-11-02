@@ -167,62 +167,80 @@ with col_nombre:
     nombre_lista = [""] + df['Nombre'].unique().tolist()
     st.selectbox("Buscar por Nombre", nombre_lista, key='selected_nombre', on_change=on_nombre_change)
 
+# Función para cargar imágenes desde URL
+@st.cache_data
+def cargar_imagen(url):
+    try:
+        response = requests.get(url)
+        img = Image.open(BytesIO(response.content))
+        return img
+    except:
+        return None
+
+# Función para mostrar producto en detalle con imagen y controles
+def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
+    st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
+    
+    # Determinar el precio a mostrar
+    precio = producto['Precio x Mayor'] if mostrar_mayorista else producto['Precio Jugueterias face']
+    if mostrar_descuento:
+        precio *= (1 - descuento / 100)
+
+    st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${precio:,.2f}</span>", unsafe_allow_html=True)
+
+    # Mostrar la imagen del producto con controles para cambiar el tamaño
+    col_img, col_btns = st.columns([5, 1])
+    with col_img:
+        imagen_url = producto.get('imagen', '')
+        if imagen_url:
+            imagen = cargar_imagen(imagen_url)
+            if imagen:
+                img_size = st.session_state.get('img_size', 300)
+                st.image(imagen, width=img_size)
+            else:
+                st.write("Imagen no disponible.")
+    with col_btns:
+        if st.button("➕"):
+            st.session_state.img_size = min(st.session_state.get('img_size', 300) + 50, 600)
+        if st.button("➖"):
+            st.session_state.img_size = max(st.session_state.get('img_size', 300) - 50, 100)
+
 # Si se selecciona un código y un nombre, mostrar el producto
 if st.session_state.selected_codigo and st.session_state.selected_nombre:
     producto_data = df[df['Codigo'] == st.session_state.selected_codigo].iloc[0]
+    mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor")
+    mostrar_descuento = st.checkbox("Mostrar calculador de descuento")
+    descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1) if mostrar_descuento else 0
+    mostrar_producto_completo(producto_data, mostrar_mayorista, mostrar_descuento, descuento)
 
-    # Agregar el checkbox para mostrar precio por mayor y calculador de descuento
-    col1, col2 = st.columns([1, 2])
-    with col1:
-        mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor")
-    with col2:
-        mostrar_descuento = st.checkbox("Mostrar calculador de descuento")
-    if mostrar_descuento:
-        descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1, value=0)
-    else:
-        descuento = 0
-
-    # Mostrar el producto en detalle (nombre, código, precio)
-    precio_mostrar = producto_data['Precio x Mayor'] if mostrar_mayorista else producto_data['Precio Jugueterias face']
-    precio_descuento = precio_mostrar * (1 - descuento / 100) if mostrar_descuento and descuento > 0 else precio_mostrar
-    st.write(f"**Nombre:** {producto_data['Nombre']}")
-    st.write(f"**Código:** {producto_data['Codigo']}")
-    st.write(f"**Precio:** ${precio_descuento:,.2f}")
-
-# Sección para ver lista por categorías o por novedades
-col_opciones = st.columns(3)
-with col_opciones[0]:
-    ver_por_categorias = st.checkbox("Ver lista por Categorías")
-with col_opciones[1]:
-    ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
-with col_opciones[2]:
-    st.checkbox("Sugerir por Rubro (Próximamente)")
-
-# Función para mostrar lista de productos paginada
+# Función para mostrar lista de productos con paginación
 def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
     inicio = (pagina - 1) * productos_por_pagina
     fin = inicio + productos_por_pagina
     productos_pagina = df.iloc[inicio:fin]
 
-    for i, producto in productos_pagina.iterrows():
+    for _, producto in productos_pagina.iterrows():
         st.write(f"**Nombre:** {producto['Nombre']}")
         st.write(f"**Código:** {producto['Codigo']}")
         st.write(f"**Precio:** ${producto['Precio Jugueterias face']:,.2f}")
+        if producto.get("imagen"):
+            imagen = cargar_imagen(producto["imagen"])
+            if imagen:
+                st.image(imagen, width=100)
         st.write("---")
 
-# Ver lista por categorías
+# Filtros para mostrar productos por categoría o novedad
+ver_por_categorias = st.checkbox("Ver lista por Categorías")
+ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
+
+# Mostrar lista por categorías
 if ver_por_categorias:
-    todas_las_categorias = df['Categorias'].dropna().unique()
-    categorias_individuales = set()
-    for categorias in todas_las_categorias:
-        for categoria in categorias.split(','):
-            categorias_individuales.add(categoria.strip())
-    categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
-    if categoria_seleccionada:
-        productos_categoria = df[df['Categorias'].apply(lambda x: categoria_seleccionada in [c.strip() for c in str(x).split(',')])]
-        num_paginas = (len(productos_categoria) // 10) + 1
-        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(productos_categoria, pagina)
+    categorias = sorted(set([c.strip() for cat in df['Categorias'].dropna().unique() for c in cat.split(',')]))
+    categoria_seleccionada = st.selectbox('Categorías:', categorias)
+    productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada, na=False)]
+    num_paginas = (len(productos_categoria) // 10) + 1
+    pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
+    mostrar_lista_productos(productos_categoria, pagina)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
