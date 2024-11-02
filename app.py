@@ -210,29 +210,8 @@ def obtener_color_stock(stock):
 
 # Mostrar producto completo
 def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
-    col_img, col_datos = st.columns([1, 3])
-    
-    with col_datos:
-        st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
-        
-        precio = producto['Precio x Mayor'] if mostrar_mayorista else producto['Precio']
-        if mostrar_descuento:
-            precio_descuento = precio * (1 - descuento / 100)
-            st.markdown(f"<span style='font-size: 24px; color:blue;'>Precio con {descuento}% de descuento: ${precio_descuento:,.2f}</span>", unsafe_allow_html=True)
-        else:
-            precio_descuento = precio
-
-        stock_suc2 = producto.get('StockSuc2', 0)
-        st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${precio_descuento:,.2f} | Disponible en Suc 2: {'Sin stock' if stock_suc2 == 0 else int(stock_suc2)}</span>", unsafe_allow_html=True)
-        
-        stock_color = obtener_color_stock(producto['Stock'])
-        st.markdown(f"<span style='font-size: 24px; color: {stock_color};'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
-
-        # Opción para mostrar u ocultar la ubicación
-        if st.checkbox('Mostrar Ubicación', value=False):
-            st.write(f"**Pasillo**: {producto.get('Pasillo', 'Sin datos')}")
-            st.write(f"**Estante**: {producto.get('Estante', 'Sin datos')}")
-            st.write(f"**Proveedor**: {producto.get('Proveedor', 'Sin datos')}")
+    # Mostrar los datos y la imagen de forma más organizada
+    col_img, col_datos = st.columns([2, 3])
     
     with col_img:
         imagen_url = producto.get('imagen', '')
@@ -251,6 +230,31 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
         with col_btn_minus:
             if st.button("➖", key="reducir_tamano"):
                 st.session_state.img_size = max(st.session_state.get('img_size', 300) - 50, 100)
+
+    with col_datos:
+        st.markdown(f"<h2 style='font-size: 36px;'>{producto['Codigo']} | {producto['Nombre']} | ${producto['Precio']:,.2f}</h2>", unsafe_allow_html=True)
+        
+        # Mostrar Precio Mayorista si corresponde
+        precio = producto['Precio x Mayor'] if mostrar_mayorista else producto['Precio']
+        if mostrar_descuento:
+            precio_descuento = precio * (1 - descuento / 100)
+            st.markdown(f"<span style='font-size: 24px; color:blue;'>Precio con {descuento}% de descuento: ${precio_descuento:,.2f}</span>", unsafe_allow_html=True)
+        else:
+            precio_descuento = precio
+
+        stock_suc2 = producto.get('StockSuc2', 0)
+        stock_suc2_text = "NO" if stock_suc2 == 0 else int(stock_suc2)
+        stock_suc2_color = "red" if stock_suc2 == 0 else "green"
+        st.markdown(f"<span style='font-size: 24px; color: {stock_suc2_color};'>StockSuc2: {stock_suc2_text}</span>", unsafe_allow_html=True)
+        
+        stock_color = obtener_color_stock(producto['Stock'])
+        st.markdown(f"<span style='font-size: 24px; color: {stock_color};'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
+
+        # Opción para mostrar u ocultar la ubicación
+        if st.checkbox('Mostrar Ubicación', value=False):
+            st.write(f"**Pasillo**: {producto.get('Pasillo', 'Sin datos')}")
+            st.write(f"**Estante**: {producto.get('Estante', 'Sin datos')}")
+            st.write(f"**Proveedor**: {producto.get('Proveedor', 'Sin datos')}")
 
 # Si se selecciona un código y un nombre, mostrar el producto
 if st.session_state.selected_codigo and st.session_state.selected_nombre:
@@ -277,11 +281,10 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
                 if imagen:
                     st.image(imagen, width=100)
         with col_datos:
-            st.markdown(f"<h4>{producto['Nombre']}</h4>", unsafe_allow_html=True)
-            st.write(f"**Código:** {producto['Codigo']}")
-            st.write(f"**Precio:** ${producto['Precio']:,.2f}")
+            st.markdown(f"<h4>{producto['Codigo']} | {producto['Nombre']} | ${producto['Precio']:,.2f}</h4>", unsafe_allow_html=True)
             stock_disponible_suc2 = "Sin stock" if producto.get('StockSuc2', 0) == 0 else int(producto['StockSuc2'])
-            st.write(f"**Disponible en Suc 2:** {stock_disponible_suc2}")
+            stock_suc2_color = "red" if producto.get('StockSuc2', 0) == 0 else "green"
+            st.markdown(f"<span style='color: {stock_suc2_color};'>**StockSuc2:** {stock_disponible_suc2}</span>", unsafe_allow_html=True)
             stock_color = obtener_color_stock(producto['Stock'])
             st.markdown(f"<span style='color: {stock_color};'>**Stock:** {producto['Stock']}</span>", unsafe_allow_html=True)
         st.write("---")
@@ -323,4 +326,4 @@ if filtro_codigo:
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 12px;'>Powered by VASCO.SORO</p>", unsafe_allow_html=True) 
+st.markdown("<p style='text-align: center; font-size: 12px;'>Powered by VASCO.SORO</p>", unsafe_allow_html=True)
