@@ -88,10 +88,6 @@ file_path = '1804no.xlsx'
 # Intentar cargar el archivo
 df = load_data(file_path)
 
-# Mostrar todas las columnas para verificar nombres
-if df is not None:
-    st.write("Columnas disponibles en el archivo cargado:", df.columns.tolist())
-
 # Verificación de columnas requeridas
 if df is not None:
     columnas_requeridas = ["Precio", "Precio x Mayor", "Stock", "StockSuc2"]
@@ -241,22 +237,23 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
             else:
                 st.write("Imagen no disponible.")
     with col_btns:
-        if st.button("➕"):
+        st.write("**Ajustar Imagen:**")
+        if st.button("➕ Aumentar Tamaño"):
             st.session_state.img_size = min(st.session_state.get('img_size', 300) + 50, 600)
-        if st.button("➖"):
+        if st.button("➖ Reducir Tamaño"):
             st.session_state.img_size = max(st.session_state.get('img_size', 300) - 50, 100)
 
     # Opción para mostrar u ocultar la ubicación
-    if st.checkbox('Mostrar Ubicación'):
-        st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}")
-        st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
-        st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
+    if st.checkbox('Mostrar Ubicación', value=False):
+        st.write(f"**Pasillo**: {producto.get('Pasillo', 'Sin datos')}")
+        st.write(f"**Estante**: {producto.get('Estante', 'Sin datos')}")
+        st.write(f"**Proveedor**: {producto.get('Proveedor', 'Sin datos')}")
 
 # Si se selecciona un código y un nombre, mostrar el producto
 if st.session_state.selected_codigo and st.session_state.selected_nombre:
     producto_data = df[df['Codigo'] == st.session_state.selected_codigo].iloc[0]
-    mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor")
-    mostrar_descuento = st.checkbox("Mostrar calculador de descuento")
+    mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor", value=False)
+    mostrar_descuento = st.checkbox("Mostrar calculador de descuento", value=False)
     descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1) if mostrar_descuento else 0
     mostrar_producto_completo(producto_data, mostrar_mayorista, mostrar_descuento, descuento)
 
@@ -281,8 +278,8 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
         st.markdown(f"<span style='color: {stock_color};'>**Stock:** {producto['Stock']}</span>", unsafe_allow_html=True)
         
         # Información adicional
-        st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
-        st.write(f"Ubicación - Pasillo: {producto.get('Pasillo', 'Sin datos')}, Estante: {producto.get('Estante', 'Sin datos')}, Columna: {producto.get('Columna', 'Sin datos')}")
+        st.write(f"**Proveedor**: {producto.get('Proveedor', 'Sin datos')}")
+        st.write(f"**Ubicación** - Pasillo: {producto.get('Pasillo', 'Sin datos')}, Estante: {producto.get('Estante', 'Sin datos')}, Columna: {producto.get('Columna', 'Sin datos')}")
         
         if producto.get("imagen"):
             imagen = cargar_imagen(producto["imagen"])
