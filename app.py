@@ -323,7 +323,7 @@ if filtro_codigo:
         num_paginas = (len(productos_prefijo) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         mostrar_lista_productos(productos_prefijo, pagina)
-
+ 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; font-size: 12px;'>Powered by VASCO.SORO</p>", unsafe_allow_html=True)
