@@ -319,7 +319,7 @@ if ordenar_por_novedad:
 if filtro_codigo:
     prefijo_codigo = st.text_input("Ingresa el prefijo del código")
     if prefijo_codigo:
-        productos_prefijo = df[df['Codigo'].str.startswith(prefijo_codigo, na=False)]
+        productos_prefijo = df[df['Codigo'].str.startswith(prefijo_codigo, na=False, case=False)]
         num_paginas = (len(productos_prefijo) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         mostrar_lista_productos(productos_prefijo, pagina)
