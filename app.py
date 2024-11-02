@@ -23,7 +23,7 @@ def obtener_fecha_modificacion_github(usuario, repo, archivo):
     else:
         return "No se pudo obtener la fecha de actualización"
 
-# Definir los detalles del repositorio
+# Detalles del repositorio
 usuario = "VASCOSORO"
 repo = "Soop"
 archivo = '1804no.xlsx'
@@ -31,23 +31,48 @@ archivo = '1804no.xlsx'
 # Intentar obtener la fecha de modificación
 fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
 
-# Función para cargar datos con opción de subida de archivo si no se encuentra
+# Función para cargar datos
 @st.cache_data
 def load_data(file_path):
     try:
         if not os.path.isfile(file_path):
             raise FileNotFoundError(f"El archivo '{file_path}' no se encuentra en el directorio.")
         df = pd.read_excel(file_path, engine='openpyxl')
-
-        # Renombrar la columna "Precio" a "Precio x Mayor"
-        if "Precio" in df.columns:
-            df = df.rename(columns={"Precio": "Precio x Mayor"})
-
-        st.success(f"Archivo '{file_path}' cargado correctamente.")
         
-        # Mostrar los nombres de las columnas para verificar
-        st.write("Columnas en el archivo cargado:", df.columns.tolist())
-        
+        # Renombrar columnas para que coincidan con lo esperado
+        columnas_renombradas = {
+            "Id": "id",
+            "Id Externo": "id externo",
+            "Codigo": "Codigo",
+            "Nombre": "Nombre",
+            "Precio x Mayor": "Precio x Mayor",
+            "Activo": "Activo",
+            "Fecha Creado": "Fecha Creado",
+            "Fecha Modificado": "Fecha Modificado",
+            "Descripcion": "Descripcion",
+            "Orden": "Orden",
+            "Codigo de Barras": "Codigo de Barras",
+            "unidad por bulto": "unidad por bulto",
+            "inner": "Presentacion/paquete",
+            "forzar multiplos": "forzar venta x cantidad",
+            "Costo usd": "Costo (USD)",
+            "Costo": "Costo (Pesos)",
+            "Etiquetas": "Etiquetas",
+            "Stock": "Stock",
+            "StockSuc2": "StockSuc2",
+            "Marca": "Marca",
+            "categorias": "Categorias",
+            "imagen": "imagen",
+            "Proveedor": "Proveedor",
+            "Pasillo": "Pasillo",
+            "Estante": "Estante",
+            "de Vencimiento": "Fecha de Vencimiento",
+            "Columna": "Columna",
+            "Precio": "Precio",
+            "Precio face": "Ultimo Precio (Pesos)",
+            "Mayorista": "Ultimo Precio (USD)"
+        }
+        df = df.rename(columns=columnas_renombradas)
         return df
     except FileNotFoundError as fnf_error:
         st.error(str(fnf_error))
@@ -57,125 +82,25 @@ def load_data(file_path):
         st.exception(e)
         return None
 
-# Especificar el nombre del archivo
+# Nombre del archivo
 file_path = '1804no.xlsx'
 
 # Intentar cargar el archivo
 df = load_data(file_path)
 
-# Verificación adicional para asegurarse de que las columnas existan
+# Verificación de columnas requeridas
 if df is not None:
-    columnas_requeridas = ["Precio Jugueterias face", "Precio x Mayor"]
-    for columna in columnas_requeridas:
-        if columna not in df.columns:
-            st.error(f"La columna '{columna}' no se encuentra en el archivo cargado.")
-            st.stop()  # Detener si falta alguna columna importante
+    columnas_requeridas = ["Precio", "Precio x Mayor", "Stock", "StockSuc2"]
+    columnas_faltantes = [col for col in columnas_requeridas if col not in df.columns]
+    if columnas_faltantes:
+        st.warning(f"Las siguientes columnas no se encuentran en el archivo cargado: {', '.join(columnas_faltantes)}. Verifica los nombres de las columnas en el archivo.")
 
-# Función para cambiar el color del stock
-def obtener_color_stock(stock):
-    if stock > 5:
-        return 'green'
-    elif stock < 0:
-        return 'red'
-    elif stock <= 1:
-        return 'orange'
-    else:
-        return 'black'
-
-# Función para cargar imágenes desde URL
-@st.cache_data
-def cargar_imagen(url):
-    try:
-        response = requests.get(url)
-        img = Image.open(BytesIO(response.content))
-        return img
-    except:
-        return None
-
-# Mostrar producto en formato completo (con imagen y control para cambiar tamaño)
-def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
-    st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
-
-    # Mostrar precio normal o precio por mayor basado en el checkbox
-    if mostrar_mayorista:
-        precio_mostrar = producto.get('Precio x Mayor', None)
-        tipo_precio = "Precio x Mayor"
-    else:
-        precio_mostrar = producto.get('Precio Jugueterias face', None)
-        tipo_precio = "Precio"
-
-    # Verificación para manejar precios faltantes
-    if precio_mostrar is None:
-        st.error(f"El precio '{tipo_precio}' no está disponible para este producto.")
-        return
-
-    precio_formateado = f"{precio_mostrar:,.0f}".replace(",", ".")
-    stock_color = obtener_color_stock(producto['Stock'])
-    st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | {tipo_precio}: ${precio_formateado} | <span style='color: {stock_color};'>Stock: {producto['Stock']}</span></span>", unsafe_allow_html=True)
-
-    if mostrar_descuento and descuento > 0:
-        precio_descuento = precio_mostrar * (1 - descuento / 100)
-        st.markdown(f"<span style='font-size: 24px; color:blue;'>Precio con {descuento}% de descuento: ${precio_descuento:,.0f}</span>", unsafe_allow_html=True)
-
-    st.markdown(f"<p style='font-size: 26px;'>Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}</p>", unsafe_allow_html=True)
-    st.write(f"<p style='font-size: 24px;'>Categorías: {producto['Categorias']}</p>", unsafe_allow_html=True)
-
-    col_img, col_btns = st.columns([5, 1])
-    with col_img:
-        imagen_url = producto.get('imagen', '')
-        if imagen_url:
-            imagen = cargar_imagen(imagen_url)
-            if imagen:
-                img_size = st.session_state.get('img_size', 300)
-                st.image(imagen, width=img_size)
-            else:
-                st.write("Imagen no disponible.")
-    with col_btns:
-        st.markdown("**Vista**")
-        if st.button("➕"):
-            st.session_state.img_size = min(st.session_state.get('img_size', 300) + 50, 600)
-        if st.button("➖"):
-            st.session_state.img_size = max(st.session_state.get('img_size', 300) - 50, 100)
-
-    if st.checkbox('Mostrar Ubicación'):
-        st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}")
-        st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
-        st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
-
-# Mostrar productos en formato de lista con imágenes (paginar resultados, sin control de tamaño)
-def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
-    inicio = (pagina - 1) * productos_por_pagina
-    fin = inicio + productos_por_pagina
-    productos_pagina = df.iloc[inicio:fin]
-
-    for i, producto in productos_pagina.iterrows():
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            imagen_url = producto.get('imagen', '')
-            if imagen_url:
-                imagen = cargar_imagen(imagen_url)
-                if imagen:
-                    st.image(imagen, width=150)
-                else:
-                    st.write("Imagen no disponible.")
-
-        with col2:
-            st.write(f"### {producto['Nombre']}")
-            stock_color = obtener_color_stock(producto['Stock'])
-            precio_formateado = f"{producto['Precio Jugueterias face']:,.0f}".replace(",", ".")
-            st.markdown(f"Código: {producto['Codigo']} | Precio: ${precio_formateado} | <span style='color: {stock_color};'>STOCK: {producto['Stock']}</span>", unsafe_allow_html=True)
-            st.write(f"Descripción: {producto['Descripcion'] if not pd.isna(producto['Descripcion']) else 'Sin datos'}")
-            st.write(f"Categorías: {producto['Categorias']}")
-        st.write("---")
-
-# Cargar datos
-df = load_data(file_path)
-
-# Checkbox para mostrar/ocultar la sección de la fecha, mensaje de filas y el botón de actualizar
-mostrar_seccion_superior = st.checkbox("Mostrar detalles de archivo y botón de actualización", value=True)
+# Checkbox para mostrar/ocultar la sección de detalles de archivo y actualización
+mostrar_seccion_superior = st.checkbox("Mostrar detalles de archivo y botón de actualización", value=False)
 
 # Si el checkbox está activado, mostrar la sección superior
 if mostrar_seccion_superior:
+    st.success("Archivo cargado correctamente.")
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown(
         f"""
@@ -194,31 +119,25 @@ if mostrar_seccion_superior:
         password = st.text_input("Ingrese la contraseña para subir el archivo:", type="password")
 
     with col_upload:
-        if password:
-            if password == "pasteur100pre":
-                st.success("Contraseña correcta. Puedes subir el archivo.")
-                uploaded_file = st.file_uploader("Selecciona un archivo Excel o CSV", type=["xlsx", "csv"])
-                if uploaded_file is not None:
-                    try:
-                        file_extension = os.path.splitext(uploaded_file.name)[1]
-                        if file_extension == ".xlsx":
-                            with open(file_path, "wb") as f:
-                                f.write(uploaded_file.getbuffer())
-                        elif file_extension == ".csv":
-                            try:
-                                csv_data = pd.read_csv(uploaded_file, encoding="utf-8", error_bad_lines=False, sep=None, engine="python")
-                            except UnicodeDecodeError:
-                                csv_data = pd.read_csv(uploaded_file, encoding="ISO-8859-1", error_bad_lines=False, sep=None, engine="python")
-                            csv_data.to_excel(file_path, index=False, engine='openpyxl')
-                            st.success("Archivo CSV convertido a Excel y guardado correctamente.")
-                        else:
-                            st.error("Formato no admitido. Sube un archivo en formato .xlsx o .csv")
-                        st.cache_data.clear()
-                        df = load_data(file_path)
-                    except Exception as e:
-                        st.error(f"Error al subir el archivo: {e}")
-            else:
-                st.error("Contraseña incorrecta.")
+        if password == "pasteur100pre":  # Reemplaza con la contraseña correcta
+            st.success("Contraseña correcta. Puedes subir el archivo.")
+            uploaded_file = st.file_uploader("Selecciona un archivo Excel o CSV", type=["xlsx", "csv"])
+            if uploaded_file is not None:
+                try:
+                    file_extension = os.path.splitext(uploaded_file.name)[1]
+                    if file_extension == ".xlsx":
+                        with open(file_path, "wb") as f:
+                            f.write(uploaded_file.getbuffer())
+                    elif file_extension == ".csv":
+                        csv_data = pd.read_csv(uploaded_file, encoding="utf-8", sep=None, engine="python")
+                        csv_data.to_excel(file_path, index=False, engine='openpyxl')
+                        st.success("Archivo CSV convertido a Excel y guardado correctamente.")
+                    st.cache_data.clear()
+                    df = load_data(file_path)
+                except Exception as e:
+                    st.error(f"Error al subir el archivo: {e}")
+        else:
+            st.error("Contraseña incorrecta.")
 
     # Botón para actualizar datos
     st.markdown("<hr>", unsafe_allow_html=True)
@@ -232,11 +151,8 @@ if mostrar_seccion_superior:
             st.cache_data.clear()
             st.success("Datos actualizados correctamente.")
 
-# Línea negra sobre el título y arriba de "Soop Buscador"
-st.markdown("<hr style='border:2px solid black'>", unsafe_allow_html=True)
-
 # Título
-st.markdown("<h1 style='text-align: center;'>🐻Sooper 3.o🐻 beta  </h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>🐻Sooper 3.o🐻 beta</h1>", unsafe_allow_html=True)
 
 # Inicializar variables en session_state para el buscador
 if 'selected_codigo' not in st.session_state:
@@ -272,46 +188,124 @@ with col_nombre:
     nombre_lista = [""] + df['Nombre'].unique().tolist()
     st.selectbox("Buscar por Nombre", nombre_lista, key='selected_nombre', on_change=on_nombre_change)
 
+# Funciones adicionales
+@st.cache_data
+def cargar_imagen(url):
+    try:
+        response = requests.get(url)
+        img = Image.open(BytesIO(response.content))
+        return img
+    except:
+        return None
+
+def obtener_color_stock(stock):
+    if stock > 5:
+        return 'green'
+    elif stock <= 1:
+        return 'orange'
+    elif stock < 0:
+        return 'red'
+    else:
+        return 'black'
+
+# Mostrar producto completo
+def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
+    # Mostrar los datos y la imagen de forma más organizada
+    col_img, col_datos = st.columns([2, 3])
+    
+    with col_img:
+        imagen_url = producto.get('imagen', '')
+        if imagen_url:
+            imagen = cargar_imagen(imagen_url)
+            if imagen:
+                img_size = st.session_state.get('img_size', 300)
+                st.image(imagen, width=img_size)
+            else:
+                st.write("Imagen no disponible.")
+        st.write("**Ajustar Imagen:**")
+        col_btn_plus, col_btn_minus = st.columns([1, 1])
+        with col_btn_plus:
+            if st.button("➕", key="aumentar_tamano"):
+                st.session_state.img_size = min(st.session_state.get('img_size', 300) + 50, 600)
+        with col_btn_minus:
+            if st.button("➖", key="reducir_tamano"):
+                st.session_state.img_size = max(st.session_state.get('img_size', 300) - 50, 100)
+
+    with col_datos:
+        st.markdown(f"<h2 style='font-size: 36px;'>{producto['Codigo']} | {producto['Nombre']} | ${producto['Precio']:,.2f}</h2>", unsafe_allow_html=True)
+        
+        # Mostrar Precio Mayorista si corresponde
+        precio = producto['Precio x Mayor'] if mostrar_mayorista else producto['Precio']
+        if mostrar_descuento:
+            precio_descuento = precio * (1 - descuento / 100)
+            st.markdown(f"<span style='font-size: 24px; color:blue;'>Precio con {descuento}% de descuento: ${precio_descuento:,.2f}</span>", unsafe_allow_html=True)
+        else:
+            precio_descuento = precio
+
+        stock_suc2 = producto.get('StockSuc2', 0)
+        stock_suc2_text = "NO" if stock_suc2 == 0 else int(stock_suc2)
+        stock_suc2_color = "red" if stock_suc2 == 0 else "green"
+        st.markdown(f"<span style='font-size: 24px; color: {stock_suc2_color};'>StockSuc2: {stock_suc2_text}</span>", unsafe_allow_html=True)
+        
+        stock_color = obtener_color_stock(producto['Stock'])
+        st.markdown(f"<span style='font-size: 24px; color: {stock_color};'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
+
+        # Opción para mostrar u ocultar la ubicación
+        if st.checkbox('Mostrar Ubicación', value=False):
+            st.write(f"**Pasillo**: {producto.get('Pasillo', 'Sin datos')}")
+            st.write(f"**Estante**: {producto.get('Estante', 'Sin datos')}")
+            st.write(f"**Proveedor**: {producto.get('Proveedor', 'Sin datos')}")
+
 # Si se selecciona un código y un nombre, mostrar el producto
 if st.session_state.selected_codigo and st.session_state.selected_nombre:
     producto_data = df[df['Codigo'] == st.session_state.selected_codigo].iloc[0]
-
-    # Agregar el checkbox para mostrar precio por mayor y calculador de descuento
-    col1, col2 = st.columns([1, 2])
+    col1, col2 = st.columns([1, 1])
     with col1:
-        mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor")
+        mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor", value=False)
     with col2:
-        mostrar_descuento = st.checkbox("Mostrar calculador de descuento")
-    if mostrar_descuento:
-        descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1, value=0)
-    else:
-        descuento = 0
+        mostrar_descuento = st.checkbox("Mostrar calculador de descuento", value=False)
+    descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1) if mostrar_descuento else 0
+    mostrar_producto_completo(producto_data, mostrar_mayorista, mostrar_descuento, descuento)
 
-    # Mostrar el producto con las opciones de precio por mayor y descuento
-    mostrar_producto_completo(producto_data, mostrar_mayorista=mostrar_mayorista, mostrar_descuento=mostrar_descuento, descuento=descuento)
+# Función para mostrar lista de productos con paginación
+def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
+    inicio = (pagina - 1) * productos_por_pagina
+    fin = inicio + productos_por_pagina
+    productos_pagina = df.iloc[inicio:fin]
 
-# Sección para ver lista por categorías o por novedades
-col_opciones = st.columns(3)
-with col_opciones[0]:
+    for _, producto in productos_pagina.iterrows():
+        col_img, col_datos = st.columns([1, 3])
+        with col_img:
+            if producto.get("imagen"):
+                imagen = cargar_imagen(producto["imagen"])
+                if imagen:
+                    st.image(imagen, width=100)
+        with col_datos:
+            st.markdown(f"<h4>{producto['Codigo']} | {producto['Nombre']} | ${producto['Precio']:,.2f}</h4>", unsafe_allow_html=True)
+            stock_disponible_suc2 = "Sin stock" if producto.get('StockSuc2', 0) == 0 else int(producto['StockSuc2'])
+            stock_suc2_color = "red" if producto.get('StockSuc2', 0) == 0 else "green"
+            st.markdown(f"<span style='color: {stock_suc2_color};'>**StockSuc2:** {stock_disponible_suc2}</span>", unsafe_allow_html=True)
+            stock_color = obtener_color_stock(producto['Stock'])
+            st.markdown(f"<span style='color: {stock_color};'>**Stock:** {producto['Stock']}</span>", unsafe_allow_html=True)
+        st.write("---")
+
+# Filtros para mostrar productos por categoría o novedad
+col_cat, col_nov, col_cod = st.columns([1, 1, 1])
+with col_cat:
     ver_por_categorias = st.checkbox("Ver lista por Categorías")
-with col_opciones[1]:
+with col_nov:
     ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
-with col_opciones[2]:
-    st.checkbox("Sugerir por Rubro (Próximamente)")
+with col_cod:
+    filtro_codigo = st.checkbox("Listado por Inicio de Código")
 
-# Ver lista por categorías
+# Mostrar lista por categorías
 if ver_por_categorias:
-    todas_las_categorias = df['Categorias'].dropna().unique()
-    categorias_individuales = set()
-    for categorias in todas_las_categorias:
-        for categoria in categorias.split(','):
-            categorias_individuales.add(categoria.strip())
-    categoria_seleccionada = st.selectbox('Categorías:', sorted(categorias_individuales))
-    if categoria_seleccionada:
-        productos_categoria = df[df['Categorias'].apply(lambda x: categoria_seleccionada in [c.strip() for c in str(x).split(',')])]
-        num_paginas = (len(productos_categoria) // 10) + 1
-        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(productos_categoria, pagina)
+    categorias = sorted(set([c.strip() for cat in df['Categorias'].dropna().unique() for c in cat.split(',')]))
+    categoria_seleccionada = st.selectbox('Categorías:', categorias)
+    productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada, na=False)]
+    num_paginas = (len(productos_categoria) // 10) + 1
+    pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
+    mostrar_lista_productos(productos_categoria, pagina)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
@@ -320,6 +314,15 @@ if ordenar_por_novedad:
         num_paginas = (len(df_ordenado) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
         mostrar_lista_productos(df_ordenado, pagina)
+
+# Filtro por Inicio de Código
+if filtro_codigo:
+    prefijo_codigo = st.text_input("Ingresa el prefijo del código")
+    if prefijo_codigo:
+        productos_prefijo = df[df['Codigo'].str.startswith(prefijo_codigo, na=False)]
+        num_paginas = (len(productos_prefijo) // 10) + 1
+        pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
+        mostrar_lista_productos(productos_prefijo, pagina)
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
