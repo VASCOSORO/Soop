@@ -145,7 +145,7 @@ if mostrar_seccion_superior:
             st.error("Contraseña incorrecta.")
 
 # Título
-st.markdown("<h1 style='text-align: center;'>🐻Sooper 3.o🐻 beta</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>🐻Sooper 3.3.o🐻 beta</h1>", unsafe_allow_html=True)
 
 # Definir `mostrar_mayorista` como una variable global
 mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor", value=False, key='mostrar_mayorista_global')
