@@ -182,6 +182,13 @@ if st.session_state.selected_codigo and st.session_state.selected_nombre:
     else:
         descuento = 0
 
+    # Mostrar el producto en detalle (nombre, código, precio)
+    precio_mostrar = producto_data['Precio x Mayor'] if mostrar_mayorista else producto_data['Precio Jugueterias face']
+    precio_descuento = precio_mostrar * (1 - descuento / 100) if mostrar_descuento and descuento > 0 else precio_mostrar
+    st.write(f"**Nombre:** {producto_data['Nombre']}")
+    st.write(f"**Código:** {producto_data['Codigo']}")
+    st.write(f"**Precio:** ${precio_descuento:,.2f}")
+
 # Sección para ver lista por categorías o por novedades
 col_opciones = st.columns(3)
 with col_opciones[0]:
@@ -190,6 +197,18 @@ with col_opciones[1]:
     ordenar_por_novedad = st.checkbox("Ordenar por Novedad")
 with col_opciones[2]:
     st.checkbox("Sugerir por Rubro (Próximamente)")
+
+# Función para mostrar lista de productos paginada
+def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
+    inicio = (pagina - 1) * productos_por_pagina
+    fin = inicio + productos_por_pagina
+    productos_pagina = df.iloc[inicio:fin]
+
+    for i, producto in productos_pagina.iterrows():
+        st.write(f"**Nombre:** {producto['Nombre']}")
+        st.write(f"**Código:** {producto['Codigo']}")
+        st.write(f"**Precio:** ${producto['Precio Jugueterias face']:,.2f}")
+        st.write("---")
 
 # Ver lista por categorías
 if ver_por_categorias:
@@ -203,7 +222,7 @@ if ver_por_categorias:
         productos_categoria = df[df['Categorias'].apply(lambda x: categoria_seleccionada in [c.strip() for c in str(x).split(',')])]
         num_paginas = (len(productos_categoria) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        # Mostrar productos en formato lista aquí
+        mostrar_lista_productos(productos_categoria, pagina)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
@@ -211,7 +230,7 @@ if ordenar_por_novedad:
         df_ordenado = df.sort_values('Fecha Creado', ascending=False)
         num_paginas = (len(df_ordenado) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        # Mostrar productos en formato lista aquí
+        mostrar_lista_productos(df_ordenado, pagina)
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
