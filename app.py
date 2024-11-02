@@ -149,6 +149,7 @@ st.markdown("<h1 style='text-align: center;'>🐻Sooper 3.o🐻 beta</h1>", unsa
 
 # Definir `mostrar_mayorista` como una variable global
 mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor", value=False)
+mostrar_descuento = st.checkbox("Mostrar calculador de descuento", value=False)
 
 # Inicializar variables en session_state para el buscador
 if 'selected_codigo' not in st.session_state:
@@ -283,7 +284,7 @@ def mostrar_lista_productos(df, mostrar_mayorista, pagina, productos_por_pagina=
 
 # Filtro por Inicio de Código
 if filtro_codigo:
-    prefijo_codigo = st.text_input("Ingresa el prefijo del código")
+    prefijo_codigo = st.text_input("Listar por Código")
     if prefijo_codigo:
         productos_prefijo = df[df['Codigo'].str.startswith(prefijo_codigo, na=False)]
         if not productos_prefijo.empty:
