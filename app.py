@@ -285,3 +285,4 @@ if filtro_codigo:
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; font-size: 12px;'>Powered by VASCO.SORO</p>", unsafe_allow_html=True)
+ 
