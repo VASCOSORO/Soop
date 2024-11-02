@@ -13,16 +13,15 @@ tz_argentina = pytz.timezone('America/Argentina/Buenos_Aires')
 # Función para obtener la fecha de la última modificación del archivo en GitHub
 def obtener_fecha_modificacion_github(usuario, repo, archivo):
     url = f"https://api.github.com/repos/{usuario}/{repo}/commits?path={archivo}&per_page=1"
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
+    response = requests.get(url)
+    if response.status_code == 200:
         commit_data = response.json()[0]
         fecha_utc = commit_data['commit']['committer']['date']
         fecha_utc = datetime.strptime(fecha_utc, "%Y-%m-%dT%H:%M:%SZ")
         fecha_argentina = fecha_utc.astimezone(tz_argentina)
         return fecha_argentina.strftime("%Y-%m-%d %H:%M:%S")
-    except:
-        return None  # Si falla, simplemente devolvemos None
+    else:
+        return "No se pudo obtener la fecha de actualización"
 
 # Detalles del repositorio
 usuario = "VASCOSORO"
@@ -107,11 +106,7 @@ mostrar_seccion_superior = st.checkbox("Mostrar detalles de archivo y botón de 
 if mostrar_seccion_superior:
     st.success("Archivo cargado correctamente.")
     st.markdown("<hr>", unsafe_allow_html=True)
-    
-    # Mostrar la fecha de última modificación si está disponible
-    if fecha_ultima_modificacion:
-        st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo {archivo}: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
-    
+    st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo {archivo}: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
     st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
     # Checkbox para activar la subida de un nuevo archivo
