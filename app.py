@@ -26,7 +26,7 @@ def obtener_fecha_modificacion_github(usuario, repo, archivo):
 # Detalles del repositorio
 usuario = "VASCOSORO"
 repo = "Soop"
-archivo = 'archivo_modificado_productos_20241102_001654.xlsx'
+archivo = '1804no.xlsx'
 
 # Intentar obtener la fecha de modificación
 fecha_ultima_modificacion = obtener_fecha_modificacion_github(usuario, repo, archivo)
@@ -48,7 +48,7 @@ def load_data(file_path):
         return None
 
 # Nombre del archivo
-file_path = 'archivo_modificado_productos_20241102_001654.xlsx'
+file_path = '1804no.xlsx'
 
 # Intentar cargar el archivo
 df = load_data(file_path)
