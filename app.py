@@ -102,32 +102,23 @@ df = load_data(file_path)
 # Checkbox para mostrar/ocultar la sección de detalles de archivo y actualización
 mostrar_seccion_superior = st.checkbox("Mostrar detalles de archivo y botón de actualización", value=False)
 
-# Si el checkbox está activado, mostrar la sección superior
+# Mostrar última modificación y el botón de actualización solo si el checkbox está activado
 if mostrar_seccion_superior:
     st.success("Archivo cargado correctamente.")
     st.markdown("<hr>", unsafe_allow_html=True)
-    
-    # Título de la sección
-    st.markdown(
-        f"""
-        <div style="display: flex; align-items: center;">
-            <span style="font-size: 24px; margin-right: 10px;">🔒</span>
-            <span style="font-size: 24px; font-weight: bold;'>Subir Nuevo Archivo Excel</span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    
-    # Crear una columna para alinear el campo de contraseña y el uploader
-    col_pass, col_space, col_upload = st.columns([1, 0.1, 2])
+    st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo {archivo}: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
+    st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
 
-    with col_pass:
-        password = st.text_input("Ingrese la contraseña para subir el archivo:", type="password")
-
-    with col_upload:
-        if password == "pasteur100pre":  # Contraseña correcta
-            st.success("Contraseña correcta. Puedes subir el archivo.")
-            uploaded_file = st.file_uploader("Selecciona un archivo Excel o CSV", type=["xlsx", "csv"])
+    # Checkbox para activar la subida de un nuevo archivo
+    actualizar_datos = st.checkbox("Actualizar datos mediante archivo nuevo")
+    
+    if actualizar_datos:
+        # Campo de contraseña para subir archivo
+        password = st.text_input("Ingrese la contraseña para habilitar la carga del archivo:", type="password")
+        
+        if password == "pasteur100pre":
+            st.success("Contraseña correcta. Puede cargar un nuevo archivo para actualizar.")
+            uploaded_file = st.file_uploader("Seleccione un archivo Excel o CSV para subir", type=["xlsx", "csv"])
             if uploaded_file is not None:
                 try:
                     file_extension = os.path.splitext(uploaded_file.name)[1]
@@ -145,21 +136,8 @@ if mostrar_seccion_superior:
                     st.success("Datos actualizados correctamente.")
                 except Exception as e:
                     st.error(f"Error al subir el archivo: {e}")
-        else:
+        elif password:  # Mostrar mensaje solo si se ha ingresado algo en el campo de contraseña
             st.error("Contraseña incorrecta.")
-    
-    # Mostrar la fecha de la última modificación
-    st.markdown("<hr>", unsafe_allow_html=True)
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.markdown(f"<p style='font-size: 12px;'>Última modificación del archivo {archivo}: {fecha_ultima_modificacion}</p>", unsafe_allow_html=True)
-        st.success(f"Se cargaron {df.shape[0]} filas y {df.shape[1]} columnas del archivo de Excel.")
-    
-    with col2:
-        if st.button('Actualizar datos'):
-            st.cache_data.clear()
-            df = load_data(file_path)
-            st.success("Datos actualizados correctamente.")
 
 # Título
 st.markdown("<h1 style='text-align: center;'>🐻Sooper 3.o🐻 beta</h1>", unsafe_allow_html=True)
@@ -265,41 +243,6 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
             st.write(f"**Pasillo**: {producto.get('Pasillo', 'Sin datos')}")
             st.write(f"**Estante**: {producto.get('Estante', 'Sin datos')}")
             st.write(f"**Proveedor**: {producto.get('Proveedor', 'Sin datos')}")
-
-# Si se selecciona un código y un nombre, mostrar el producto
-if st.session_state.selected_codigo and st.session_state.selected_nombre:
-    producto_data = df[df['Codigo'] == st.session_state.selected_codigo].iloc[0]
-    col1, col2 = st.columns([1, 1])
-    with col2:
-        mostrar_descuento = st.checkbox("Mostrar calculador de descuento", value=False)
-    descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1) if mostrar_descuento else 0
-    mostrar_producto_completo(producto_data, mostrar_mayorista, mostrar_descuento, descuento)
-
-# Función para mostrar lista de productos con paginación
-def mostrar_lista_productos(df, mostrar_mayorista, pagina, productos_por_pagina=10):
-    inicio = (pagina - 1) * productos_por_pagina
-    fin = inicio + productos_por_pagina
-    productos_pagina = df.iloc[inicio:fin]
-
-    for _, producto in productos_pagina.iterrows():
-        col_img, col_datos = st.columns([1, 3])
-        with col_img:
-            if producto.get("imagen"):
-                imagen = cargar_imagen(producto["imagen"])
-                if imagen:
-                    st.image(imagen, width=100)
-        with col_datos:
-            # Cambiar el precio mostrado según la selección de "Mostrar Precio por Mayor"
-            precio = producto['Precio x Mayor'] if mostrar_mayorista else producto['Precio']
-            st.markdown(f"<h4>{producto['Codigo']} | {producto['Nombre']} | ${precio:,.2f}</h4>", unsafe_allow_html=True)
-            st.markdown(f"<p>{producto['Descripcion']}</p>", unsafe_allow_html=True)
-
-            # Mostrar "Disponible en Suc. 2" solo si hay stock en sucursal 2 y el stock principal está en rojo
-            stock_color = obtener_color_stock(producto['Stock'])
-            st.markdown(f"<span style='color: {stock_color};'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
-            if 'StockSuc2' in producto and producto['StockSuc2'] > 0 and stock_color == 'red':
-                st.markdown(f"<span style='color: green;'>Disponible en Suc. 2: {producto['StockSuc2']}</span>", unsafe_allow_html=True)
-        st.write("---")
 
 # Filtros para mostrar productos por categoría o novedad
 col_cat, col_nov, col_cod = st.columns([1, 1, 1])
