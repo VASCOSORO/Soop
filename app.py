@@ -6,7 +6,6 @@ from io import BytesIO
 from datetime import datetime
 import pytz
 import os
-import numpy as np
 
 # Definir la zona horaria de Argentina
 tz_argentina = pytz.timezone('America/Argentina/Buenos_Aires')
@@ -74,11 +73,17 @@ def load_data(file_path):
             "Mayorista": "Ultimo Precio (USD)"
         }
         df = df.rename(columns=columnas_renombradas)
+        
         # Asegurar que StockSuc2 tenga valores numéricos y rellenar con 0 si falta
         if 'StockSuc2' in df.columns:
             df['StockSuc2'] = pd.to_numeric(df['StockSuc2'], errors='coerce').fillna(0)
         else:
             df['StockSuc2'] = 0
+        
+        # Convertir 'Fecha Creado' a datetime si no está ya en ese formato
+        if 'Fecha Creado' in df.columns:
+            df['Fecha Creado'] = pd.to_datetime(df['Fecha Creado'], errors='coerce')
+        
         return df
     except FileNotFoundError as fnf_error:
         st.error(str(fnf_error))
@@ -232,9 +237,11 @@ def mostrar_lista_productos(df, mostrar_mayorista, pagina, productos_por_pagina=
             # Cambiar el precio mostrado según la selección de "Mostrar Precio por Mayor"
             precio = producto['Precio x Mayor'] if mostrar_mayorista else producto['Precio']
             st.markdown(f"<h4>{producto['Codigo']} | {producto['Nombre']} | ${precio:,.2f}</h4>", unsafe_allow_html=True)
+            st.markdown(f"<p>{producto['Descripcion']}</p>", unsafe_allow_html=True)
 
             # Mostrar "Disponible en Suc. 2" solo si hay stock en sucursal 2 y el stock principal está en rojo
             stock_color = obtener_color_stock(producto['Stock'])
+            st.markdown(f"<span style='color: {stock_color};'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
             if 'StockSuc2' in producto and producto['StockSuc2'] > 0 and stock_color == 'red':
                 st.markdown(f"<span style='color: green;'>Disponible en Suc. 2: {producto['StockSuc2']}</span>", unsafe_allow_html=True)
         st.write("---")
