@@ -198,7 +198,40 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
             st.write(f"**Estante**: {producto.get('Estante', 'Sin datos')}")
             st.write(f"**Proveedor**: {producto.get('Proveedor', 'Sin datos')}")
 
-# Filtros
+# Si se selecciona un código y un nombre, mostrar el producto
+if st.session_state.selected_codigo and st.session_state.selected_nombre:
+    producto_data = df[df['Codigo'] == st.session_state.selected_codigo].iloc[0]
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor", value=False)
+    with col2:
+        mostrar_descuento = st.checkbox("Mostrar calculador de descuento", value=False)
+    descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1) if mostrar_descuento else 0
+    mostrar_producto_completo(producto_data, mostrar_mayorista, mostrar_descuento, descuento)
+
+# Función para mostrar lista de productos con paginación
+def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
+    inicio = (pagina - 1) * productos_por_pagina
+    fin = inicio + productos_por_pagina
+    productos_pagina = df.iloc[inicio:fin]
+
+    for _, producto in productos_pagina.iterrows():
+        col_img, col_datos = st.columns([1, 3])
+        with col_img:
+            if producto.get("imagen"):
+                imagen = cargar_imagen(producto["imagen"])
+                if imagen:
+                    st.image(imagen, width=100)
+        with col_datos:
+            st.markdown(f"<h4>{producto['Codigo']} | {producto['Nombre']} | ${producto['Precio']:,.2f}</h4>", unsafe_allow_html=True)
+            stock_disponible_suc2 = "Sin stock" if producto.get('StockSuc2', 0) == 0 else int(producto['StockSuc2'])
+            stock_suc2_color = "red" if producto.get('StockSuc2', 0) == 0 else "green"
+            st.markdown(f"<span style='color: {stock_suc2_color};'>**StockSuc2:** {stock_disponible_suc2}</span>", unsafe_allow_html=True)
+            stock_color = obtener_color_stock(producto['Stock'])
+            st.markdown(f"<span style='color: {stock_color};'>**Stock:** {producto['Stock']}</span>", unsafe_allow_html=True)
+        st.write("---")
+
+# Filtros para mostrar productos por categoría o novedad
 col_cat, col_nov, col_cod = st.columns([1, 1, 1])
 with col_cat:
     ver_por_categorias = st.checkbox("Ver lista por Categorías")
@@ -209,10 +242,11 @@ with col_cod:
 
 # Filtro por Inicio de Código
 if filtro_codigo:
-    prefijo_codigo = st.text_input("Ingresa el prefijo del código (antes del guión)")
+    prefijo_codigo = st.text_input("Ingresa el prefijo del código")
     if prefijo_codigo:
-        productos_prefijo = df[df['Codigo'].str.startswith(prefijo_codigo + "-", na=False)]
+        productos_prefijo = df[df['Codigo'].str.startswith(prefijo_codigo, na=False)]
         
+        # Verificar si hay productos con el prefijo ingresado
         if not productos_prefijo.empty:
             num_paginas = (len(productos_prefijo) - 1) // 10 + 1
             pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1, step=1)
@@ -220,7 +254,7 @@ if filtro_codigo:
         else:
             st.warning("No se encontraron productos con ese prefijo.")
 
-# Filtros adicionales
+# Mostrar lista por categorías
 if ver_por_categorias:
     categorias = sorted(set([c.strip() for cat in df['Categorias'].dropna().unique() for c in cat.split(',')]))
     categoria_seleccionada = st.selectbox('Categorías:', categorias)
@@ -229,6 +263,7 @@ if ver_por_categorias:
     pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
     mostrar_lista_productos(productos_categoria, pagina)
 
+# Ordenar por novedad
 if ordenar_por_novedad:
     if 'Fecha Creado' in df.columns:
         df_ordenado = df.sort_values('Fecha Creado', ascending=False)
