@@ -110,6 +110,9 @@ if mostrar_seccion_superior:
 # Título
 st.markdown("<h1 style='text-align: center;'>🐻Sooper 3.o🐻 beta</h1>", unsafe_allow_html=True)
 
+# Definir `mostrar_mayorista` como una variable global
+mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor", value=False)
+
 # Inicializar variables en session_state para el buscador
 if 'selected_codigo' not in st.session_state:
     st.session_state.selected_codigo = ''
@@ -213,8 +216,6 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
 if st.session_state.selected_codigo and st.session_state.selected_nombre:
     producto_data = df[df['Codigo'] == st.session_state.selected_codigo].iloc[0]
     col1, col2 = st.columns([1, 1])
-    with col1:
-        mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor", value=False)
     with col2:
         mostrar_descuento = st.checkbox("Mostrar calculador de descuento", value=False)
     descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1) if mostrar_descuento else 0
