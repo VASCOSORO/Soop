@@ -149,7 +149,6 @@ st.markdown("<h1 style='text-align: center;'>🐻Sooper 3.o🐻 beta</h1>", unsa
 
 # Definir `mostrar_mayorista` como una variable global
 mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor", value=False)
-mostrar_descuento = st.checkbox("Mostrar calculador de descuento", value=False)
 
 # Inicializar variables en session_state para el buscador
 if 'selected_codigo' not in st.session_state:
