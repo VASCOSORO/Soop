@@ -38,6 +38,41 @@ def load_data(file_path):
         if not os.path.isfile(file_path):
             raise FileNotFoundError(f"El archivo '{file_path}' no se encuentra en el directorio.")
         df = pd.read_excel(file_path, engine='openpyxl')
+        
+        # Renombrar columnas para que coincidan con lo esperado
+        columnas_renombradas = {
+            "Id": "id",
+            "Id Externo": "id externo",
+            "Codigo": "Codigo",
+            "Nombre": "Nombre",
+            "Precio x Mayor": "Precio x Mayor",
+            "Activo": "Activo",
+            "Fecha Creado": "Fecha Creado",
+            "Fecha Modificado": "Fecha Modificado",
+            "Descripcion": "Descripcion",
+            "Orden": "Orden",
+            "Codigo de Barras": "Codigo de Barras",
+            "unidad por bulto": "unidad por bulto",
+            "inner": "Presentacion/paquete",
+            "forzar multiplos": "forzar venta x cantidad",
+            "Costo usd": "Costo (USD)",
+            "Costo": "Costo (Pesos)",
+            "Etiquetas": "Etiquetas",
+            "Stock": "Stock",
+            "StockSuc2": "StockSuc2",
+            "Marca": "Marca",
+            "categorias": "Categorias",
+            "imagen": "imagen",
+            "Proveedor": "Proveedor",
+            "Pasillo": "Pasillo",
+            "Estante": "Estante",
+            "de Vencimiento": "Fecha de Vencimiento",
+            "Columna": "Columna",
+            "Precio": "Precio",
+            "Precio face": "Ultimo Precio (Pesos)",
+            "Mayorista": "Ultimo Precio (USD)"
+        }
+        df = df.rename(columns=columnas_renombradas)
         return df
     except FileNotFoundError as fnf_error:
         st.error(str(fnf_error))
