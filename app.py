@@ -147,6 +147,9 @@ if mostrar_seccion_superior:
 # Título
 st.markdown("<h1 style='text-align: center;'>🐻Sooper 3.o🐻 beta</h1>", unsafe_allow_html=True)
 
+# Definir `mostrar_mayorista` como una variable global
+mostrar_mayorista = st.checkbox("Mostrar Precio por Mayor", value=False, key='mostrar_mayorista_global')
+
 # Inicializar variables en session_state para el buscador
 if 'selected_codigo' not in st.session_state:
     st.session_state.selected_codigo = ''
@@ -251,11 +254,9 @@ if st.session_state.selected_codigo and st.session_state.selected_nombre:
     producto_data = df[df['Codigo'] == st.session_state.selected_codigo].iloc[0]
     col1, col2 = st.columns([1, 1])
     with col1:
-        mostrar_mayorista_checkbox = st.checkbox("Mostrar Precio por Mayor", value=False, key='mostrar_mayorista_producto')
-    with col2:
-        mostrar_descuento_checkbox = st.checkbox("Mostrar calculador de descuento", value=False, key='mostrar_descuento_producto')
-    descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1) if mostrar_descuento_checkbox else 0
-    mostrar_producto_completo(producto_data, mostrar_mayorista_checkbox, mostrar_descuento_checkbox, descuento)
+        mostrar_descuento = st.checkbox("Mostrar calculador de descuento", value=False, key='mostrar_descuento_producto')
+    descuento = st.number_input("Calcular descuento (%)", min_value=0, max_value=100, step=1) if mostrar_descuento else 0
+    mostrar_producto_completo(producto_data, mostrar_mayorista, mostrar_descuento, descuento)
 
 # Filtros para mostrar productos por categoría o novedad
 col_cat, col_nov, col_cod = st.columns([1, 1, 1])
@@ -297,7 +298,7 @@ if filtro_codigo:
         if not productos_prefijo.empty:
             num_paginas = (len(productos_prefijo) - 1) // 10 + 1
             pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1, step=1)
-            mostrar_lista_productos(productos_prefijo, mostrar_mayorista_checkbox, pagina)
+            mostrar_lista_productos(productos_prefijo, mostrar_mayorista, pagina)
         else:
             st.warning("No se encontraron productos con ese prefijo.")
 
@@ -308,7 +309,7 @@ if ver_por_categorias:
     productos_categoria = df[df['Categorias'].str.contains(categoria_seleccionada, na=False)]
     num_paginas = (len(productos_categoria) // 10) + 1
     pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-    mostrar_lista_productos(productos_categoria, mostrar_mayorista_checkbox, pagina)
+    mostrar_lista_productos(productos_categoria, mostrar_mayorista, pagina)
 
 # Ordenar por novedad
 if ordenar_por_novedad:
@@ -316,7 +317,7 @@ if ordenar_por_novedad:
         df_ordenado = df.sort_values('Fecha Creado', ascending=False)
         num_paginas = (len(df_ordenado) // 10) + 1
         pagina = st.number_input('Página:', min_value=1, max_value=num_paginas, value=1)
-        mostrar_lista_productos(df_ordenado, mostrar_mayorista_checkbox, pagina)
+        mostrar_lista_productos(df_ordenado, mostrar_mayorista, pagina)
 
 # Footer
 st.markdown("<hr>", unsafe_allow_html=True)
