@@ -60,7 +60,7 @@ df = load_data(file_path)
 
 # Verificación de columnas requeridas
 if df is not None:
-    columnas_requeridas = ["Precio Jugueterias face", "Precio x Mayor"]
+    columnas_requeridas = ["Precio Jugueterias face", "Precio x Mayor", "Stock", "Disponible Suc 2"]
     for columna in columnas_requeridas:
         if columna not in df.columns:
             st.error(f"La columna '{columna}' no se encuentra en el archivo cargado.")
@@ -177,18 +177,35 @@ def cargar_imagen(url):
     except:
         return None
 
-# Función para mostrar producto en detalle con imagen y controles
+# Función para determinar color del stock
+def obtener_color_stock(stock):
+    if stock > 5:
+        return 'green'
+    elif stock <= 1:
+        return 'orange'
+    elif stock < 0:
+        return 'red'
+    else:
+        return 'black'
+
+# Función para mostrar producto en detalle con imagen, stock, ubicación y controles
 def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, descuento):
     st.markdown(f"<h3 style='font-size: 36px;'>{producto['Nombre']}</h3>", unsafe_allow_html=True)
-    
+
     # Determinar el precio a mostrar
     precio = producto['Precio x Mayor'] if mostrar_mayorista else producto['Precio Jugueterias face']
     if mostrar_descuento:
-        precio *= (1 - descuento / 100)
+        precio_descuento = precio * (1 - descuento / 100)
+        st.markdown(f"<span style='font-size: 24px; color:blue;'>Precio con {descuento}% de descuento: ${precio_descuento:,.2f}</span>", unsafe_allow_html=True)
+    else:
+        precio_descuento = precio
 
-    st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${precio:,.2f}</span>", unsafe_allow_html=True)
+    st.markdown(f"<span style='font-size: 28px; font-weight: bold;'>Código: {producto['Codigo']} | Precio: ${precio_descuento:,.2f} | Disponible en Suc 2: {producto['Disponible Suc 2']}</span>", unsafe_allow_html=True)
+    
+    stock_color = obtener_color_stock(producto['Stock'])
+    st.markdown(f"<span style='font-size: 24px; color: {stock_color};'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
 
-    # Mostrar la imagen del producto con controles para cambiar el tamaño
+    # Mostrar imagen del producto con controles de tamaño
     col_img, col_btns = st.columns([5, 1])
     with col_img:
         imagen_url = producto.get('imagen', '')
@@ -204,6 +221,12 @@ def mostrar_producto_completo(producto, mostrar_mayorista, mostrar_descuento, de
             st.session_state.img_size = min(st.session_state.get('img_size', 300) + 50, 600)
         if st.button("➖"):
             st.session_state.img_size = max(st.session_state.get('img_size', 300) - 50, 100)
+
+    # Opción para mostrar u ocultar la ubicación
+    if st.checkbox('Mostrar Ubicación'):
+        st.write(f"Pasillo: {producto.get('Pasillo', 'Sin datos')}")
+        st.write(f"Estante: {producto.get('Estante', 'Sin datos')}")
+        st.write(f"Proveedor: {producto.get('Proveedor', 'Sin datos')}")
 
 # Si se selecciona un código y un nombre, mostrar el producto
 if st.session_state.selected_codigo and st.session_state.selected_nombre:
@@ -223,6 +246,9 @@ def mostrar_lista_productos(df, pagina, productos_por_pagina=10):
         st.write(f"**Nombre:** {producto['Nombre']}")
         st.write(f"**Código:** {producto['Codigo']}")
         st.write(f"**Precio:** ${producto['Precio Jugueterias face']:,.2f}")
+        stock_color = obtener_color_stock(producto['Stock'])
+        st.markdown(f"<span style='color: {stock_color};'>Stock: {producto['Stock']}</span>", unsafe_allow_html=True)
+        st.write(f"Disponible en Suc 2: {producto['Disponible Suc 2']}")
         if producto.get("imagen"):
             imagen = cargar_imagen(producto["imagen"])
             if imagen:
